@@ -78,37 +78,38 @@ export const AuthProvider = ({ children }) => {
                 logout();
             }
         } catch (error) {
-            logout();
+            setIsLoggedIn(false);
+            setUser(null);
+            setDefaultAddress(null);
         } finally {
             setLoading(false);
         }
     }, [logout, isTokenExpired]);
 
-    useEffect(() => {
-        const interceptor = api.interceptors.response.use(
-            response => response,
-            error => {
-                if (error.response && error.response.status === 401) {
-                    console.error('API呼び出し中に401 Unauthorizedエラーが発生しました。ログアウトします。');
-                    logout();
-                    alert('セッションが切れました。再度ログインしてください。');
-                    return Promise.reject(error);
-                }
-                return Promise.reject(error);
-            }
-        );
-
-        return () => {
-            api.interceptors.response.eject(interceptor);
-        };
-    }, [logout]);
+//     useEffect(() => {
+//         const interceptor = api.interceptors.response.use(
+//             response => response,
+//             error => {
+//                 if (error.response && error.response.status === 401) {
+//                     console.error('API呼び出し中に401 Unauthorizedエラーが発生しました。ログアウトします。');
+//                     logout();
+//                     alert('セッションが切れました。再度ログインしてください。');
+//                     return Promise.reject(error);
+//                 }
+//                 return Promise.reject(error);
+//             }
+//         );
+//
+//         return () => {
+//             api.interceptors.response.eject(interceptor);
+//         };
+//     }, [logout]);
 
     useEffect(() => {
         validateToken();
     }, [validateToken, token]);
 
     const login = async (email, password) => {
-        setLoading(true);
 
         try {
             const loginData = await authApi.login(email, password);
@@ -119,8 +120,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('userEmail', userEmail || '');
 
             setToken(newToken);
-
-            await validateToken();
+            setIsLoggedIn(true);
 
             const anonymousSessionId = Cookies.get('sessionId');
             if (anonymousSessionId) {
@@ -135,13 +135,9 @@ export const AuthProvider = ({ children }) => {
                 console.log('DEBUG_AUTH: not have anonymousSessionId');
             }
 
-            setLoading(false);
             return loginData;
         } catch (error) {
-            setIsLoggedIn(false);
             console.error("ログイン失敗:", error);
-            logout();
-            setLoading(false);
             throw error;
         }
     };

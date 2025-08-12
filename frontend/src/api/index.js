@@ -17,7 +17,7 @@ api.interceptors.request.use(
     const tokenType = localStorage.getItem('tokenType')||'Bearer';
     // console.log('Sending request to:', config.url);
     // console.log('Token:', token);
-    if (token) {
+    if (token && !config.url.includes('/api/auth/login') && !config.url.includes('/api/auth/register')) {
       config.headers.Authorization = `${tokenType} ${token}`;
       // console.log('Authorization header set:', config.headers.Authorization);
     }
@@ -33,13 +33,16 @@ api.interceptors.response.use(
   error => {
 
     if (error.response && error.response.status === 401) {
+      if(error.config && error.config.url.includes('/api/auth/login')){
+        return Promise.reject(error);
+      }
       console.log("401 Unauthorized received. Token might be expired or invalid.");
       // 自動にログアウト
       localStorage.removeItem('jwtToken');
       localStorage.removeItem('tokenType');
       localStorage.removeItem('userEmail');
 
-      alert("トークンが無効です。 もう一度ログインをお願いします。");
+
 
       window.dispatchEvent(new Event('storage'));
       // ログインページへ
