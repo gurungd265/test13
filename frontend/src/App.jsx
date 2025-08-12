@@ -25,6 +25,7 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import { AuthContext } from "./contexts/AuthContext";
 import OrderHistoryPage from './pages/orders/OrderHistoryPage.jsx';
 import OrderDetailPage from './pages/orders/OrderDetailPage';
+import Promotions from "./components/Promotions.jsx";
 
 const ProtectedRoute = ({ requiresAuth = false, onlyUnauthenticated = false, redirectPath = '/' }) => {
         const { isLoggedIn,loading } = useAuth();
@@ -66,6 +67,7 @@ function AppContent() {
             isCatalogOpen={isCatalogOpen}
             setIsCatalogOpen={setIsCatalogOpen}
         />
+        {location.pathname === "/" && <Promotions/>}
 
         {/* Routing Area */}
         <main className="min-h-screen pb-20">
