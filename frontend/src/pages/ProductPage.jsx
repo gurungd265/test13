@@ -221,27 +221,28 @@ export default function ProductPage() {
         }
     };
 
-    useEffect(() => {
-        const fetchProduct = async () => {
-            try {
-                setLoading(true);
-                const data = await productsApi.getProductById(parseInt(id));
-                setProduct(data);
+    const fetchProduct = async () => {
+        try {
+            setLoading(true);
+            const data = await productsApi.getProductById(parseInt(id));
+            setProduct(data);
+            const reviewData = await reviewApi.getReviewsByProduct(id);
+            setReviews(reviewData.content);
+            setAverageRating(calculateAverageRating(reviewData.content));
+            setReviewCount(reviewData.content.length);
 
-                const reviewData = await reviewApi.getReviewsByProduct(id);
-                setReviews(reviewData.content); // 리뷰 리스트 저장
-                setAverageRating(calculateAverageRating(reviewData.content)); // 평균 별점 계산
-                setReviewCount(reviewData.content.length); // 리뷰 개수 계산
-
-                if (data.images && data.images.length > 0) {
-                    setMainImage(data.images[0].imageUrl);
-                }
-            } catch (err) {
-                setError('商品情報を読み込むことができませんでした。');
-            } finally {
-                setLoading(false);
+            if (data.images && data.images.length > 0) {
+                setMainImage(data.images[0].imageUrl);
             }
-        };
+        } catch (err) {
+            setError('商品情報を読み込むことができませんでした。');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 상품 데이터를 불러옴
+    useEffect(() => {
         fetchProduct();
     }, [id]);
 
@@ -504,6 +505,7 @@ export default function ProductPage() {
                 <ProductReviewList
                     productId={parseInt(id, 10)}
                     currentUser={user?.email}
+                    fetchProductData={fetchProduct}
                 />
             </div>
         </div>

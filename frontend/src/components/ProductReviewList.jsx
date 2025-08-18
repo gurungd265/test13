@@ -41,7 +41,7 @@ const StarRating = ({rating, onChange}) => {
     );
 };
 
-const ProductReviewList = ({productId, currentUser}) => {
+const ProductReviewList = ({ productId, currentUser, fetchProductData }) => {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -50,10 +50,12 @@ const ProductReviewList = ({productId, currentUser}) => {
     const [editedContent, setEditedContent] = useState('');
     const [editedRating, setEditedRating] = useState(5);
 
+    // Fetch reviews on productId change
     useEffect(() => {
         fetchReviews();
     }, [productId]);
 
+    // Fetch reviews function
     const fetchReviews = async () => {
         setLoading(true);
         setError(null);
@@ -67,29 +69,34 @@ const ProductReviewList = ({productId, currentUser}) => {
         }
     };
 
+    // Delete review function
     const handleDelete = async (reviewId) => {
         if (!window.confirm('このレビューを削除しますか？')) return;
 
         try {
             await reviewApi.deleteReview(productId, reviewId);
-            await fetchReviews();
+            await fetchReviews();  // After deletion, fetch reviews again to update the list
+            fetchProductData();    // Refresh the product data in the parent component (to update rating)
         } catch {
             alert('レビューの削除に失敗しました。');
         }
     };
 
+    // Start editing review
     const startEditing = (review) => {
         setEditingReviewId(review.id);
         setEditedContent(review.reviewText);
         setEditedRating(review.rating);
     };
 
+    // Cancel editing review
     const cancelEditing = () => {
         setEditingReviewId(null);
         setEditedContent('');
         setEditedRating(5);
     };
 
+    // Submit edit for review
     const submitEdit = async (review) => {
         if (!editedContent || editedContent.length < 10) {
             alert("レビューは10文字以上で入力してください。");
@@ -106,13 +113,15 @@ const ProductReviewList = ({productId, currentUser}) => {
                 reviewText: editedContent,
                 rating: editedRating,
             });
-            await fetchReviews();
+            await fetchReviews();  // After editing, fetch reviews again to update the list
+            fetchProductData();    // Refresh the product data in the parent component (to update rating)
             cancelEditing();
         } catch {
             alert('レビューの更新に失敗しました。');
         }
     };
 
+    // Loading and error handling
     if (loading) return <div>Loading reviews...</div>;
     if (error) return <div>{error}</div>;
 
@@ -198,7 +207,6 @@ const ProductReviewList = ({productId, currentUser}) => {
             )}
         </div>
     );
-
 };
 
 export default ProductReviewList;
