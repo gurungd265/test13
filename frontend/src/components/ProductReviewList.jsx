@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import reviewApi from '../api/review';
 
-const ProductReviewList = ({ productId, currentUser, token }) => {
+const ProductReviewList = ({ productId, currentUser }) => {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
