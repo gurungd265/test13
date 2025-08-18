@@ -7,6 +7,7 @@ import { Heart, X } from "lucide-react";
 import { CartContext } from '../contexts/CartContext';
 import { useAuth } from "../contexts/AuthContext.jsx";
 import ImageSlider from "../components/ImageSlider.jsx";
+import ProductReviewList from "../components/ProductReviewList";
 
 export default function ProductPage() {
     const { id } = useParams();
@@ -483,6 +484,11 @@ export default function ProductPage() {
                 <p className="text-gray-700 text-sm leading-relaxed">
                     {product.description}
                 </p>
+            </div>
+
+            {/* 상품 리뷰 목록 컴포넌트 추가 */}
+            <div className="lg:col-span-2 mt-8">
+                <ProductReviewList productId={parseInt(id, 10)} />
             </div>
         </div>
     );

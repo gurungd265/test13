@@ -9,7 +9,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function Product({ product }) {
   useEffect(() => {
-    console.log("✅ product 확인:", product);
+    // console.log("✅ product 확인:", product);
   }, [product]);
 
   const { id, name, price, description, discountPrice, stockQuantity, images } =

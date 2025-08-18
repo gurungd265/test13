@@ -4,6 +4,7 @@ import com.example.backend.jwt.JwtAuthenticationFilter;
 import com.example.backend.jwt.JwtToken;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -73,6 +74,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/signup").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+
+                        // --- REVIEW API ---
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/products/*/reviews/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/*/reviews/*").authenticated()
+
                         .requestMatchers("/api/cart/items","/api/cart").permitAll()
                         .requestMatchers("/api/cart/items/**").permitAll()
                         .requestMatchers("/api/categories/**").permitAll()

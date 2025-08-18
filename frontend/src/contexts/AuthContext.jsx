@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
                 const addresses = await userApi.getUserAddresses();
                 const defaultAddr = addresses.find(addr => addr.isDefault) || null;
                 setDefaultAddress(defaultAddr);
-                console.log("AuthProvider: defaultAddress set to", defaultAddr);
+                // console.log("AuthProvider: defaultAddress set to", defaultAddr);
             } else {
                 logout();
             }

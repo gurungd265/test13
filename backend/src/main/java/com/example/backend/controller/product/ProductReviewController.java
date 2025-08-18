@@ -2,6 +2,8 @@ package com.example.backend.controller.product;
 
 import com.example.backend.dto.product.ProductReviewDto;
 import com.example.backend.service.product.ProductReviewService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,18 +23,31 @@ public class ProductReviewController {
     @PostMapping
     public ResponseEntity<ProductReviewDto> createReview(
             @PathVariable Long productId,
-            @Valid @RequestBody ProductReviewDto dto) {
+            @Valid @RequestBody ProductReviewDto dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
         dto.setProductId(productId);
+        dto.setEmail(userDetails.getUsername());
         ProductReviewDto created = reviewService.createReview(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // 리뷰 목록 조회 (페이징)
+    // 상품별 리뷰 목록 조회 (페이징)
     @GetMapping
-    public ResponseEntity<Page<ProductReviewDto>> getReviews(
+    public ResponseEntity<Page<ProductReviewDto>> getReviewsByProduct(
             @PathVariable Long productId,
-            Pageable pageable) {
+            Pageable pageable
+    ) {
         Page<ProductReviewDto> reviews = reviewService.getReviewsByProduct(productId, pageable);
+        return ResponseEntity.ok(reviews);
+    }
+
+    // 유저별 리뷰 목록 조회 (페이징)
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<ProductReviewDto>> getReviewsByUser(
+            @PathVariable Long userId,
+            Pageable pageable
+    ) {
+        Page<ProductReviewDto> reviews = reviewService.getReviewsByUser(userId, pageable);
         return ResponseEntity.ok(reviews);
     }
 
@@ -41,10 +56,13 @@ public class ProductReviewController {
     public ResponseEntity<Void> updateReview(
             @PathVariable Long productId,
             @PathVariable Long reviewId,
-            @Valid @RequestBody ProductReviewDto dto) {
+            @Valid @RequestBody ProductReviewDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
         dto.setProductId(productId);
         dto.setId(reviewId);
-        reviewService.updateReview(dto);
+        Long currentUserId = Long.valueOf(userDetails.getUsername());
+        reviewService.updateReview(dto, currentUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -52,11 +70,14 @@ public class ProductReviewController {
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long productId,
-            @PathVariable Long reviewId) {
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {  // 로그인한 사용자 정보
         ProductReviewDto dto = new ProductReviewDto();
         dto.setProductId(productId);
         dto.setId(reviewId);
-        reviewService.softDeleteReview(dto);
+        // 로그인한 사용자의 ID를 전달하여 권한 검증
+        reviewService.softDeleteReview(dto, Long.valueOf(userDetails.getUsername()));
         return ResponseEntity.noContent().build();
     }
 }

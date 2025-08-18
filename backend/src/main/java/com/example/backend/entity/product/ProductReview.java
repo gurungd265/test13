@@ -30,7 +30,7 @@ public class ProductReview {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private Byte rating;
+    private Integer rating;
 
     @Column(name = "review_text", columnDefinition = "TEXT")
     private String reviewText;

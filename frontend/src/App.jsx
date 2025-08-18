@@ -25,6 +25,8 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import { AuthContext } from "./contexts/AuthContext";
 import OrderHistoryPage from './pages/orders/OrderHistoryPage.jsx';
 import OrderDetailPage from './pages/orders/OrderDetailPage';
+import ReviewPage from './pages/ReviewPage.jsx';
+
 
 const ProtectedRoute = ({ requiresAuth = false, onlyUnauthenticated = false, redirectPath = '/' }) => {
         const { isLoggedIn,loading } = useAuth();
@@ -77,7 +79,8 @@ function AppContent() {
                   <Route path="/product/:id" element={<ProductPage />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                    <Route path="/search" element={<MobileSearchPage />} />
+                  <Route path="/search" element={<MobileSearchPage />} />
+                  <Route path="/review/:productId" element={<ReviewPage />} />
                 {/* (Payment/Checkout) 機能はショッピングカート内のアクションか別途ページ
                     もし/checkoutページがあれば、次のように保護:
                     <Route path="/checkout" element={<ProtectedRoute requiresAuth={true} redirectPath="/login"><CheckoutPage /></ProtectedRoute>} />

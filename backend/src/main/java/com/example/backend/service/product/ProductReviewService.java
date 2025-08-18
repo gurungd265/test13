@@ -11,8 +11,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -26,33 +29,34 @@ public class ProductReviewService {
         return new ProductReviewDto(
                 review.getId(),
                 review.getProduct().getId(),
-                review.getUser().getId(),
+                review.getUser().getEmail(),
                 review.getRating(),
                 review.getReviewText(),
                 review.getIsApproved(),
                 review.getCreatedAt()
         );
     }
-    
+
     // 리뷰 등록
     public ProductReviewDto createReview(ProductReviewDto dto) {
         Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new EntityNotFoundException("商品が見つかりません。"));
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("ユーザーが見つかりません。"));
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         ProductReview review = new ProductReview();
         review.setProduct(product);
         review.setUser(user);
         review.setRating(dto.getRating());
         review.setReviewText(dto.getReviewText());
-        review.setIsApproved(false); // 기본 승인 false
+        review.setIsApproved(false);
+        review.setCreatedAt(LocalDateTime.now());
 
-        ProductReview saved = reviewRepository.save(review);
-        return toDto(saved);
+        ProductReview savedReview = reviewRepository.save(review);
+        return toDto(savedReview);
     }
-    
-    // 상품별 리뷰 목록 조회 (페이징)
+
+    // 상품별 리뷰 목록 조회 (소프트 삭제된 리뷰는 자동으로 제외됨)
     public Page<ProductReviewDto> getReviewsByProduct(Long productId, Pageable pageable) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("商品が見つかりません。"));
@@ -61,7 +65,7 @@ public class ProductReviewService {
         return page.map(this::toDto);
     }
 
-    // 유저별 리뷰 목록 조회
+    // 유저별 리뷰 목록 조회 (소프트 삭제된 리뷰는 자동으로 제외됨)
     public Page<ProductReviewDto> getReviewsByUser(Long userId, Pageable pageable) {
         return reviewRepository.findByUserId(userId, pageable)
                 .map(this::toDto);
@@ -69,9 +73,16 @@ public class ProductReviewService {
 
     // 리뷰 수정
     @Transactional
-    public void updateReview(ProductReviewDto dto) {
+    public void updateReview(ProductReviewDto dto, Long currentUserId) {
         ProductReview review = reviewRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("レビューが見つかりません。"));
+
+        // 리뷰 작성자와 로그인된 사용자가 같은지 확인
+        if (!review.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("レビューの編集権限がありません。");
+        }
+
+
         review.setRating(dto.getRating());
         review.setReviewText(dto.getReviewText());
         reviewRepository.save(review);
@@ -79,12 +90,17 @@ public class ProductReviewService {
 
     // 리뷰 삭제
     @Transactional
-    public void softDeleteReview(ProductReviewDto dto) {
+    public void softDeleteReview(ProductReviewDto dto, Long currentUserId) {
         ProductReview review = reviewRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("レビューが見つかりません。"));
+
+        // 리뷰 작성자와 로그인된 사용자가 같은지 확인
+        if (!review.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("レビューの削除権限がありません。");
+        }
+
+        // 소프트 삭제 처리
         review.setDeletedAt(java.time.LocalDateTime.now());
         reviewRepository.save(review);
     }
-
-    //isApproved... AdminOnly
 }

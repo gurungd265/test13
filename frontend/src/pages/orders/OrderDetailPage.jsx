@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import orderApi from "../../api/order";
 import { FaTruck, FaBoxOpen, FaCheckCircle, FaTimesCircle, FaStar, FaUndo } from 'react-icons/fa';
 
 export default function OrderDetailPage() {
+    const navigate = useNavigate();
+
     // URLから注文IDを取得
     const { orderId } = useParams();
 
@@ -80,8 +82,9 @@ export default function OrderDetailPage() {
         setShowMessageModal({ visible: true, message: "注文が確定されました。" });
     };
 
-    const handleReview = (productId) => {
-        setShowMessageModal({ visible: true, message: `商品ID: ${productId}のレビューを書きます。` });
+    const handleReview = (productId, productImageUrl) => {
+        console.log(productImageUrl);
+        navigate(`/review/${productId}`, { state: { order, productImageUrl } });
     };
 
     const handleCancelOrder = () => {
@@ -98,53 +101,11 @@ export default function OrderDetailPage() {
     return (
         <div className="bg-gray-50 min-h-screen py-8">
             <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-                <div className="flex justify-between items-center mb-6 border-b pb-4">
-                    <h2 className="text-3xl font-bold text-gray-800">注文詳細</h2>
-                    <Link to="/orders" className="text-blue-600 hover:text-blue-800 transition-colors">
-                        ← 注文履歴に戻る
-                    </Link>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                    {/* 注文情報カード */}
-                    <div className="bg-gray-100 p-6 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3 text-gray-700">注文情報</h3>
-                        <p className="text-sm text-gray-500 mb-1">
-                            <span className="font-medium text-gray-600">注文番号:</span> #{order.orderNumber}
-                        </p>
-                        <p className="flex items-center text-sm text-gray-500 mb-1">
-                            <span className="font-medium text-gray-600 mr-2">注文状況:</span>
-                            <span className={`flex items-center gap-1 font-semibold text-base ${order.status === 'CANCELLED' ? 'text-red-500' : 'text-green-600'}`}>
-                                {statusInfo.icon} {statusInfo.text}
-                            </span>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            <span className="font-medium text-gray-600">注文日:</span> {createdAtDate}
-                        </p>
-                    </div>
-
-                    {/* 住所情報カード */}
-                    <div className="bg-gray-100 p-6 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3 text-gray-700">住所情報</h3>
-                        <div>
-                            <p className="font-medium text-gray-600">配送先住所</p>
-                            <p className="text-gray-700">{order.shippingAddress?.street}, {order.shippingAddress?.city}</p>
-                            <p className="text-gray-700">{order.shippingAddress?.state} {order.shippingAddress?.postalCode}, {order.shippingAddress?.country}</p>
-                        </div>
-                        <div className="mt-4">
-                            <p className="font-medium text-gray-600">請求先住所</p>
-                            <p className="text-gray-700">{order.billingAddress?.street}, {order.billingAddress?.city}</p>
-                            <p className="text-gray-700">{order.billingAddress?.state} {order.billingAddress?.postalCode}, {order.billingAddress?.country}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 注文商品リスト */}
                 <div className="bg-gray-100 p-6 rounded-lg mb-8 shadow-inner">
                     <h3 className="text-xl font-semibold text-gray-700 mb-4">注文商品</h3>
                     <ul className="divide-y divide-gray-300">
                         {order.orderItems?.map(item => (
-                            <li key={item.id} className="flex flex-col md:flex-row items-start md:items-center py-4">
+                            <li key={item.id} className="flex flex-col md:flex-row items-start md:items-center py-4 relative"> {/* relative 추가 */}
                                 <div className="flex-shrink-0 mb-4 md:mb-0">
                                     <img
                                         src={item.productImageUrl || "https://placehold.co/100x100/e2e8f0/64748b?text=No+Image"}
@@ -159,23 +120,18 @@ export default function OrderDetailPage() {
                                     <p className="text-sm text-gray-500">数量: {item.quantity}</p>
                                     <p className="text-sm text-gray-500">単価: {(item.productPrice || 0).toLocaleString()}円</p>
                                 </div>
-                                <div className="flex flex-col md:flex-row items-end md:items-center md:justify-between w-full md:w-auto mt-4 md:mt-0">
-                                    <p className="text-lg font-bold text-gray-900 mb-2 md:mb-0">
-                                        {(item.productPrice * item.quantity || 0).toLocaleString()}円
-                                    </p>
 
-                                    <button
-                                        onClick={() => handleReview(item.productId)}
-                                        className="ml-0 md:ml-4 px-4 py-2 bg-yellow-500 text-white rounded-full text-sm font-semibold hover:bg-yellow-600 transition-colors flex items-center gap-1"
-                                    >
-                                        <FaStar /> レビューを書く
-                                    </button>
-                                </div>
+                                {/* 버튼을 오른쪽 끝에 세로로 가운데 정렬 */}
+                                <button
+                                    onClick={() => handleReview(item.productId, item.productImageUrl)}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-yellow-500 text-white rounded-full text-sm font-semibold hover:bg-yellow-600 transition-colors inline-flex items-center gap-2"
+                                >
+                                    レビューを書く
+                                </button>
                             </li>
                         ))}
                     </ul>
                 </div>
-
                 {/* 支払い情報とボタン */}
                 <div className="bg-gray-100 p-6 rounded-lg mb-8">
                     <h3 className="text-xl font-semibold text-gray-700 mb-4">支払い情報</h3>
