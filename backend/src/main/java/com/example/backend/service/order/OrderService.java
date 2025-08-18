@@ -22,6 +22,7 @@ import com.example.backend.service.cart.CartService;
 import com.example.backend.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,6 +84,28 @@ public class OrderService {
     }
 
     @Transactional
+    public void updateOrderStatus(String userEmail, String orderNumber, OrderStatus newStatus) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new EntityNotFoundException("注文番号が見つかりません: " + orderNumber));
+
+        // **이메일을 통해 주문의 소유권을 확인하는 로직 추가**
+        if (!order.getUser().getEmail().equals(userEmail)) {
+            throw new AccessDeniedException("この注文へのアクセス権がありません。");
+        }
+
+        // ... 기존 상태 변경 로직
+        order.setStatus(newStatus);
+
+        if (newStatus == OrderStatus.DELIVERED) {
+            order.setDeliveredAt(LocalDateTime.now());
+        } else if (newStatus == OrderStatus.COMPLETED) {
+            order.setCompletedAt(LocalDateTime.now());
+        }
+
+        orderRepository.save(order);
+    }
+
+    @Transactional
     public void cancelOrder(Long orderId, String userEmail) {
         Order order = orderRepository.findByIdAndUserEmail(orderId, userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("注文が存在しないか、アクセス権限がありません。"));
@@ -131,6 +154,8 @@ public class OrderService {
     public OrderResponseDto createOrderFromRequest(String userEmail, OrderRequestDto requestDto) {
         User user = getUserOrThrow(userEmail);
         Order order = buildOrderFromRequest(requestDto, user);
+        // 주문 생성 시 희망 배송 날짜/시간 저장
+        order.setRequestedDeliveryAt(requestDto.getRequestedDeliveryAt());
         orderRepository.save(order);
         return convertToDto(order);
     }
@@ -144,7 +169,6 @@ public class OrderService {
             for (CartItemDto item : dto.getCartItems()) {
                 OrderItem orderItem = toOrderItem(item, order);
                 orderItems.add(orderItem);
-                // [수정] priceAtAddition이 null일 경우를 대비하여 Optional.ofNullable 사용
                 BigDecimal itemPrice = Optional.ofNullable(item.getPriceAtAddition()).orElse(BigDecimal.ZERO);
                 subtotal = subtotal.add(itemPrice.multiply(BigDecimal.valueOf(item.getQuantity())));
             }
@@ -194,6 +218,9 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("請求先住所が見つかりません。"));
         order.setBillingAddress(billingAddress);
 
+        // 주문 생성 시 희망 배송 날짜/시간 저장
+        order.setRequestedDeliveryAt(requestDto.getRequestedDeliveryAt());
+
         orderRepository.save(order);
 
         String transactionId = UUID.randomUUID().toString();
@@ -219,7 +246,6 @@ public class OrderService {
         for (CartItemDto item : cartDto.getItems()) {
             OrderItem orderItem = toOrderItem(item, order);
             orderItems.add(orderItem);
-            // [수정] priceAtAddition이 null일 경우를 대비하여 Optional.ofNullable 사용
             BigDecimal itemPrice = Optional.ofNullable(item.getPriceAtAddition()).orElse(BigDecimal.ZERO);
             subtotal = subtotal.add(itemPrice.multiply(BigDecimal.valueOf(item.getQuantity())));
         }
@@ -242,11 +268,10 @@ public class OrderService {
         orderItem.setProduct(productRepository.findById(item.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("商品が見つかりません。")));
         orderItem.setProductName(item.getProductName());
-        // [핵심 수정] priceAtAddition이 null일 경우 BigDecimal.ZERO로 대체
         BigDecimal priceAtAddition = Optional.ofNullable(item.getPriceAtAddition()).orElse(BigDecimal.ZERO);
         orderItem.setProductPrice(priceAtAddition);
         orderItem.setQuantity(item.getQuantity());
-        orderItem.setSubtotal(priceAtAddition.multiply(BigDecimal.valueOf(item.getQuantity()))); // 수정된 priceAtAddition 사용
+        orderItem.setSubtotal(priceAtAddition.multiply(BigDecimal.valueOf(item.getQuantity())));
         return orderItem;
     }
 
@@ -278,6 +303,9 @@ public class OrderService {
                 .billingAddress(order.getBillingAddress() != null ? addressToDto(order.getBillingAddress()) : null)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .deliveredAt(order.getDeliveredAt())
+                .completedAt(order.getCompletedAt())
+                .requestedDeliveryAt(order.getRequestedDeliveryAt())
                 .orderItems(orderItemDtos)
                 .payments(paymentResponseDtos)
                 .build();

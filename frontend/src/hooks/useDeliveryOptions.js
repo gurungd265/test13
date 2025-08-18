@@ -4,8 +4,8 @@ const useDeliveryOptions = () => {
     const DELIVERY_TIME_SLOTS = [
         { value: 'morning', label: '午前中 (8-12時)' },
         { value: 'afternoon', label: '14-16時' },
-        { value: 'evening', label: '16-18時)' },
-        { value: 'night', label: '18-21時)' }
+        { value: 'evening', label: '16-18時' },
+        { value: 'night', label: '18-21時' }
     ];
 
     // 配送可能日リストのステート

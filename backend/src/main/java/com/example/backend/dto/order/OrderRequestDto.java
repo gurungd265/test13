@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -39,4 +41,7 @@ public class OrderRequestDto { // 클라이언트 -> 서버 요청 DTO. 클라�
 
     @Min(0)
     private Integer totalAmount;
+
+    private LocalDateTime requestedDeliveryAt;
+    private String requestedDeliveryTimeSlot;
 }

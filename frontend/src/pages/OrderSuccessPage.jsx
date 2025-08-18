@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { CheckCircle, ShoppingBag, Home, ShoppingCart, Truck, CreditCard, User, Box } from 'lucide-react';
+import { CheckCircle, ShoppingBag, Home, ShoppingCart, Truck, CreditCard, User, Box, Clock } from 'lucide-react';
 
 export default function OrderSuccess() {
     const { state } = useLocation();
@@ -10,6 +10,8 @@ export default function OrderSuccess() {
 
     const orderId = state?.orderId;
     const orderDetails = state?.orderDetails;
+
+    const deliveryTimeLabel = orderDetails?.deliveryTime;
 
     if (!orderId || !orderDetails) {
         return (
@@ -117,7 +119,14 @@ export default function OrderSuccess() {
                                 <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"><Truck size={20} className="text-blue-500"/>配送先情報</h3>
                                 <p className="text-sm text-gray-600">〒{orderDetails.address.postalCode}</p>
                                 <p className="text-sm text-gray-600">{orderDetails.address.state} {orderDetails.address.city} {orderDetails.address.street}</p>
-                                <p className="text-sm text-gray-600 mt-1">お届け予定日: {orderDetails.deliveryDate}</p>
+                                <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                                	<Box size={14} className="text-gray-500" />
+                                	お届け予定日: {orderDetails.deliveryDate}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                                	<Clock size={14} className="text-gray-500" />
+                                	お届け予定時間帯: {deliveryTimeLabel}
+                                </p>
                             </div>
                         </div>
                     </div>

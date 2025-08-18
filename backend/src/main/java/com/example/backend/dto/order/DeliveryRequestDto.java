@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,10 +14,10 @@ import lombok.*;
 public class DeliveryRequestDto {
 
     @NotEmpty(message = "配送日は必須項目です。")
-    private String date;
+    private LocalDateTime requestedDeliveryAt;
 
     @NotEmpty(message = "配送時間は必須項目です。")
-    private String time;
+    private String requestedDeliveryTimeSlot;
 
     @Valid
     private AddressDto shippingAddress;

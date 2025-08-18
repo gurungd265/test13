@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -77,6 +78,15 @@ public class Order {
 
     @Column(name = "deleted_at", nullable = true, updatable = true)
     private LocalDateTime deletedAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt; // 상품 도착일
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt; // 주문 확정일
+
+    @Column(name = "requested_delivery_at")
+    private LocalDateTime requestedDeliveryAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

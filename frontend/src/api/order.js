@@ -56,7 +56,18 @@ const orderApi = {
             console.error(`注文ID ${orderId}のキャンセルに失敗しました。`, error);
             throw error;
         }
-    }
+    },
+
+    // (PATCH /api/orders/{orderNumber}/status/{newStatus})
+    updateOrderStatus: async (orderNumber, newStatus) => {
+        try {
+            const response = await api.patch(`/api/orders/${orderNumber}/status/${newStatus}`);
+            return response.data;
+        } catch (error) {
+            console.error(`注文番号 ${orderNumber}の状態更新に失敗しました。`, error);
+            throw error;
+        }
+    },
 };
 
 export default orderApi;

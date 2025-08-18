@@ -22,6 +22,11 @@ public class OrderResponseDto { // 조회용 DTO. 서버에서 클라이언트(�
     private AddressDto shippingAddress;
     private AddressDto billingAddress;
     private LocalDateTime createdAt;
+
+    private LocalDateTime deliveredAt;
+    private LocalDateTime completedAt;
+    private LocalDateTime requestedDeliveryAt;
+
     private LocalDateTime updatedAt;
 
     private List<OrderItemDto> orderItems;

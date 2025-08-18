@@ -207,6 +207,10 @@ export default function CheckoutPage() {
             return;
         }
 
+        const deliveryTimeLabel = DELIVERY_TIME_SLOTS.find(
+                (slot) => slot.value === formData.deliveryTime
+            )?.label || '指定なし';
+
         try {
             const orderPayload = {
                 paymentMethod: formData.paymentMethod,
@@ -239,6 +243,7 @@ export default function CheckoutPage() {
                     street: formData.street,
                 },
                 deliveryDate: formData.deliveryDate,
+                deliveryTime: deliveryTimeLabel,
             };
 
             navigate('/order-success', { state: { orderId, orderDetails } });

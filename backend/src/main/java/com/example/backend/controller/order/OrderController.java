@@ -131,4 +131,20 @@ public class OrderController {
         return ResponseEntity.status(201).body(orderResponseDto);
     }
 
+    @PatchMapping("/{orderNumber}/status/{newStatus}")
+    public ResponseEntity<Void> updateOrderStatus(
+            Principal principal,
+            @PathVariable String orderNumber,
+            @PathVariable OrderStatus newStatus) {
+
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userEmail = principal.getName();
+
+        // 서비스 로직에서 사용자의 소유권 확인
+        orderService.updateOrderStatus(userEmail, orderNumber, newStatus);
+
+        return ResponseEntity.ok().build();
+    }
 }

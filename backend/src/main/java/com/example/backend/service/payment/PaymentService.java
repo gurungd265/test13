@@ -124,20 +124,27 @@ public class PaymentService {
             throw new IllegalStateException("取り消しされた決済です。");
         }
 
-        // [변경] 외부 결제 시스템 취소 요청 대신, 내부 잔액 복구 로직 필요 (예: 포인트/페이페이/가상카드 잔액 복구)
-        // 여기서는 간단히 성공으로 가정하고, 실제 구현에서는 각 서비스의 복구 메서드 호출
-        boolean cancelSuccess = true; // externalPaymentService.cancel(transactionId);
-
-        if (!cancelSuccess) {
-            throw new RuntimeException("決済取り消しに失敗しました。");
+        // 결제 수단에 따라 잔액 복구 로직 호출
+        switch (payment.getPaymentMethod()) {
+            case POINT:
+                pointService.deductPoints(payment.getUserId(), payment.getAmount());
+                break;
+            case PAYPAY:
+                paypayService.deductPaypayBalance(payment.getUserId(), payment.getAmount());
+                break;
+            case CREDIT_CARD:
+                cardService.deductCreditBalance(payment.getUserId(), payment.getAmount());
+                break;
+            default:
+                throw new IllegalArgumentException("サポートされていない支払い方法です。");
         }
 
-        payment.setStatus(PaymentStatus.CANCELED); // 결제 상태 변경
+        payment.setStatus(PaymentStatus.CANCELED);
         paymentRepository.save(payment);
 
         Order order = payment.getOrder();
         if (order != null) {
-            order.setStatus(OrderStatus.CANCELLED); // 주문 상태 변경
+            order.setStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
         }
 
