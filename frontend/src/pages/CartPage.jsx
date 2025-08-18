@@ -45,7 +45,7 @@ export default function CartPage() {
               });
 
               setCart({ ...cartData, items: normalizedItems });
-              console.log('normalizedItems', normalizedItems);
+              // console.log('normalizedItems', normalizedItems);
 
               // 초기엔 전체 선택 해제 상태
               setSelectedItems(new Set());

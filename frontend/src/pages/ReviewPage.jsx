@@ -1,6 +1,5 @@
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState } from "react";
-import { FaStar } from 'react-icons/fa';
 import reviewApi from '../api/review';
 
 const ReviewPage = () => {
@@ -53,14 +52,19 @@ const ReviewPage = () => {
     return (
         <div className="review-page max-w-2xl mx-auto px-4 py-8 text-center">
             <h1 className="text-xl text-center font-bold">商品はいかがでしょうか？</h1>
-            <div className="flex items-center justify-center mt-4">
-                {[...Array(5)].map((_, index) => (
-                    <FaStar
-                        key={index}
-                        className={`cursor-pointer ${rating > index ? 'text-yellow-500' : 'text-gray-300'} text-4xl`}
-                        onClick={() => setRating(index + 1)}
-                    />
-                ))}
+            <div className="flex items-center justify-center mt-4 text-4xl">
+                {[...Array(5)].map((_, index) => {
+                    const isActive = rating > index;
+                    return (
+                        <span
+                            key={index}
+                            className={`cursor-pointer select-none ${isActive ? 'text-yellow-500' : 'text-gray-300'}`}
+                            onClick={() => setRating(index + 1)}
+                        >
+                            ★
+                        </span>
+                    );
+                })}
             </div>
 
             <textarea

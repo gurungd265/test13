@@ -156,17 +156,24 @@ export default function ProductPage() {
     };
 
     const handleAddToCart = async () => {
-        // 옵션을 반드시 요구하는 상품인지 확인
-        if (product.requiresOptions) {  // 상품이 옵션을 요구한다면
-            // 메인 페이지에서 옵션 세트가 비어 있으면 알림을 띄우고 리턴
-            if (optionSets.length === 0 || optionSets.some(set => !set.options || Object.keys(set.options).length === 0)) {
+        if (product.options && product.options.length > 0) {
+            if (optionSets.length === 0 || optionSets.some(set => Object.keys(set.options).length === 0)) {
                 alert('オプションを選択してください。');
                 return;
             }
         }
 
         try {
-            // 옵션이 선택되었으면 상품을 카트에 추가
+            if (!product.options || product.options.length === 0) {
+                console.log("Adding product without options to cart:", {
+                    productId: product.id,
+                    quantity: 1,  // 기본적으로 1개 추가
+                    options: null
+                });
+
+                await cartApi.addToCart(product.id, 1, null);  // 옵션 없이 카트에 추가
+            }
+
             for (const set of optionSets) {
                 let optionsToSend = set.options && Object.keys(set.options).length > 0
                     ? Object.values(set.options).map(opt => ({
@@ -174,16 +181,14 @@ export default function ProductPage() {
                         optionName: opt.optionName,
                         optionValue: opt.optionValue
                     }))
-                    : null; // 옵션이 없으면 null로 처리
+                    : null;
 
-                // 상품 ID와 수량, 옵션들을 콘솔에 출력해서 확인
                 console.log("Adding to cart:", {
                     productId: product.id,
                     quantity: set.quantity,
                     options: optionsToSend
                 });
 
-                // 카트에 상품 추가
                 await cartApi.addToCart(
                     product.id,
                     set.quantity,
@@ -191,19 +196,10 @@ export default function ProductPage() {
                 );
             }
 
-            // 성공적인 추가 후 처리
             alert('カートに追加されました！');
-            setOptionSets([]);  // 옵션 세트 리셋
-            setCurrentSelection({ options: {}, quantity: 1 });  // 현재 선택 리셋
-            fetchCartCount();  // 카트 수량 갱신 (한 번만 호출)
-
-            // 옵션 그룹 초기화
-            const groups = Object.keys(groupedOptionValues);
-            const resetOpened = {};
-            groups.forEach((group, idx) => {
-                resetOpened[group] = idx === 0;
-            });
-            setOpenedOptionGroups(resetOpened);  // 옵션 그룹 초기화
+            setOptionSets([]);
+            setCurrentSelection({ options: {}, quantity: 1 });
+            fetchCartCount();
         } catch (err) {
             console.error(err);
             alert('カートに追加できませんでした。');
