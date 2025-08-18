@@ -22,6 +22,7 @@ import com.example.backend.service.cart.CartService;
 import com.example.backend.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -114,7 +116,13 @@ public class OrderService {
             throw new IllegalStateException("この注文はキャンセルできません。");
         }
 
-        order.setStatus(OrderStatus.CANCELLED);
+        try {
+            paymentService.cancelPaymentsByOrderId(orderId);
+            log.info("注文ID {} の決済が正常にキャンセルされました。", orderId);
+        } catch (Exception e) {
+            log.error("注文ID {} の決済キャンセル中にエラーが発生しました。", orderId, e);
+            throw new RuntimeException("決済キャンセルに失敗しました。注文はキャンセルされません。", e);
+        }
 
         for (OrderItem item : order.getOrderItems()) {
             productRepository.findById(item.getProduct().getId())
@@ -122,6 +130,8 @@ public class OrderService {
                         product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
                     });
         }
+
+        order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
     }
 

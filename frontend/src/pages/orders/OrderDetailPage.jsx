@@ -1,56 +1,58 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import orderApi from "../../api/order";
+import { refundPointsToPayPay } from "../../api/virtualPayments";
 import { FaTruck, FaBoxOpen, FaCheckCircle, FaTimesCircle, FaStar, FaUndo, FaArrowLeft } from 'react-icons/fa';
 
 export default function OrderDetailPage() {
     const navigate = useNavigate();
-
-    // URLから注文IDを取得
     const { orderId } = useParams();
-
-    // 状態変数を初期化
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showRefundModal, setShowRefundModal] = useState(false);
     const [showMessageModal, setShowMessageModal] = useState({ visible: false, message: '' });
 
-    // 小計、配送料、税金、合計金額を計算するロジック
     const [calculatedTotals, setCalculatedTotals] = useState({
         subtotal: 0,
         shippingFee: 600,
         tax: 0,
         totalAmount: 0,
     });
-
-    // ボタンの有効/無効状態を管理
     const [isOrderCompleted, setIsOrderCompleted] = useState(false);
     const [canCancel, setCanCancel] = useState(true);
     const [canRefund, setCanRefund] = useState(true);
 
-    const checkOrderConditions = useCallback((fetchedOrder) => {
+    const checkOrderConditions = useCallback(async (fetchedOrder) => {
         if (!fetchedOrder || fetchedOrder.status === 'CANCELLED') {
             setCanCancel(false);
             setCanRefund(false);
             return;
         }
 
-        // 1. 配達完了日から3日経過した場合、自動的に注文を確定する
         const deliveredDate = fetchedOrder.deliveredAt ? new Date(fetchedOrder.deliveredAt) : null;
         const today = new Date();
         const isDeliveredAndThreeDaysPassed = deliveredDate && fetchedOrder.status === 'DELIVERED' &&
             today.getTime() > deliveredDate.getTime() + 3 * 24 * 60 * 60 * 1000;
 
-        if (isDeliveredAndThreeDaysPassed) {
-            setIsOrderCompleted(true);
-            setCanCancel(false);
+        // 配達完了後3日経過した場合、自動的に注文確定処理を実行
+        if (isDeliveredAndThreeDaysPassed && fetchedOrder.status !== 'COMPLETED') {
+            try {
+                await orderApi.updateOrderStatus(fetchedOrder.orderNumber, 'COMPLETED');
+                // ステータスが更新された後、最新の状態を反映するために再度データを読み込む
+                const updatedOrder = await orderApi.getOrderDetail(orderId);
+                setOrder(updatedOrder);
+                setIsOrderCompleted(true);
+                setCanCancel(false);
+                setCanRefund(true);
+            } catch (err) {
+                console.error("自動注文確定処理に失敗しました:", err);
+            }
         } else {
             setIsOrderCompleted(fetchedOrder.status === 'COMPLETED');
             setCanCancel(fetchedOrder.status !== 'COMPLETED' && fetchedOrder.status !== 'CANCELLED' && fetchedOrder.status !== 'DELIVERED');
         }
 
-        // 2. 注文確定日から7日経過した場合、払い戻しを無効にする
         const completedDate = fetchedOrder.completedAt ? new Date(fetchedOrder.completedAt) : null;
         const isCompletedAndSevenDaysPassed = completedDate &&
             today.getTime() > completedDate.getTime() + 7 * 24 * 60 * 60 * 1000;
@@ -58,16 +60,31 @@ export default function OrderDetailPage() {
         if (isCompletedAndSevenDaysPassed) {
             setCanRefund(false);
         } else {
-            setCanRefund(fetchedOrder.status === 'COMPLETED'); // 完了した注文のみ払い戻し可能
+            setCanRefund(fetchedOrder.status === 'COMPLETED');
         }
-    }, []);
+    }, [orderId]);
 
     const loadOrder = useCallback(async () => {
         try {
             const fetchedOrder = await orderApi.getOrderDetail(orderId);
-            setOrder(fetchedOrder);
 
-            const calculatedSubtotal = (fetchedOrder.orderItems || []).reduce((sum, item) => {
+            // `estimatedDeliveryDate`と`estimatedDeliveryTime`が取得できない場合、
+            // デモ用に仮のデータを生成するロジックを追加
+            const orderWithEstimatedInfo = { ...fetchedOrder };
+            if (!fetchedOrder.estimatedDeliveryDate) {
+                const now = new Date();
+                // 現在の日付から3日後を配達予定日として設定
+                const estimatedDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+                orderWithEstimatedInfo.estimatedDeliveryDate = estimatedDate.toISOString().split('T')[0];
+            }
+            if (!fetchedOrder.estimatedDeliveryTime) {
+                // 仮の配達予定時刻を設定 (例: 14:00 - 16:00)
+                orderWithEstimatedInfo.estimatedDeliveryTime = '14:00 - 16:00';
+            }
+
+            setOrder(orderWithEstimatedInfo);
+
+            const calculatedSubtotal = (orderWithEstimatedInfo.orderItems || []).reduce((sum, item) => {
                 return sum + (item.productPrice || 0) * (item.quantity || 0);
             }, 0);
             const shippingFee = 600;
@@ -81,8 +98,7 @@ export default function OrderDetailPage() {
                 totalAmount: totalAmount,
             });
 
-            checkOrderConditions(fetchedOrder);
-
+            checkOrderConditions(orderWithEstimatedInfo);
         } catch (err) {
             console.error("注文詳細情報の読み込み中にエラーが発生しました:", err);
             setError("注文詳細情報の読み込み中にエラーが発生しました。ログイン状態を確認してください。");
@@ -97,12 +113,10 @@ export default function OrderDetailPage() {
         }
     }, [orderId, loadOrder]);
 
-    // UIのレンダリング
     if (loading) return <div className="text-center py-10 text-gray-600">読み込み中...</div>;
     if (error) return <div className="text-center py-10 text-red-600">{error}</div>;
     if (!order) return <div className="text-center py-10 text-gray-600">注文情報が存在しません。</div>;
 
-    // 注文状況に応じたアイコンとテキストを返す
     const getStatusInfo = (status) => {
         switch (status) {
             case 'PENDING': return { text: '支払い待ち', icon: <FaBoxOpen /> };
@@ -111,14 +125,13 @@ export default function OrderDetailPage() {
             case 'DELIVERED': return { text: '配達完了', icon: <FaCheckCircle /> };
             case 'CANCELLED': return { text: '注文キャンセル', icon: <FaTimesCircle /> };
             case 'COMPLETED': return { text: '注文確定済み', icon: <FaCheckCircle /> };
+            case 'REFUND_REQUESTED': return { text: '返金申請済み', icon: <FaUndo /> };
             default: return { text: '状態不明', icon: null };
         }
     };
 
-    // 注文確定ハンドラー
     const handleConfirmOrder = async () => {
         try {
-            // orderId 대신 orderNumber를 사용하여 API 호출
             const orderNumber = order.orderNumber;
             const newStatus = 'COMPLETED';
             await orderApi.updateOrderStatus(orderNumber, newStatus);
@@ -129,7 +142,6 @@ export default function OrderDetailPage() {
         }
     };
 
-    // 注文キャンセルハンドラー
     const handleCancelOrder = async () => {
         try {
             await orderApi.cancelOrder(orderId);
@@ -140,14 +152,19 @@ export default function OrderDetailPage() {
         }
     };
 
-    const handleReview = (productId, productImageUrl) => {
-        navigate(`/review/${productId}`, { state: { order, productImageUrl } });
-    };
-
-    // 払い戻しハンドラー
     const handleRefund = async () => {
         try {
+            const userId = order.userId;
+            const refundAmount = calculatedTotals.totalAmount;
+
+            if (!userId || refundAmount <= 0) {
+                setShowMessageModal({ visible: true, message: "返金に必要な情報が不足しています。" });
+                return;
+            }
+
+            await refundPointsToPayPay(userId, refundAmount);
             await orderApi.updateOrderStatus(order.orderNumber, 'REFUND_REQUESTED');
+
             setShowMessageModal({ visible: true, message: "返金申請が完了しました。" });
             setShowRefundModal(false);
             loadOrder();
@@ -156,13 +173,18 @@ export default function OrderDetailPage() {
         }
     };
 
+    const handleReview = (productId, productImageUrl) => {
+        navigate(`/review/${productId}`, { state: { order, productImageUrl } });
+    };
+
     const statusInfo = getStatusInfo(order.status);
-    const createdAtDate = new Date(order.createdAt).toLocaleDateString();
+
+    const estimatedDate = order.estimatedDeliveryDate ? new Date(order.estimatedDeliveryDate).toLocaleDateString('ja-JP') : '未定';
+    const estimatedTime = order.estimatedDeliveryTime || '未定';
 
     return (
         <div className="bg-gray-50 min-h-screen py-8">
             <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-                {/* 戻るボタンと注文ステータス */}
                 <div className="flex justify-between items-center mb-6">
                     <button
                         onClick={() => navigate('/orders')}
@@ -196,7 +218,6 @@ export default function OrderDetailPage() {
                                     <p className="text-sm text-gray-500">数量: {item.quantity}</p>
                                     <p className="text-sm text-gray-500">単価: {(item.productPrice || 0).toLocaleString()}円</p>
                                 </div>
-                                {/* 注文が「COMPLETED」状態の場合のみレビューボタンを表示 */}
                                 {order.status === 'COMPLETED' && (
                                     <button
                                         onClick={() => handleReview(item.productId, item.productImageUrl)}
@@ -208,9 +229,24 @@ export default function OrderDetailPage() {
                             </li>
                         ))}
                     </ul>
+
+                    {/* 配送情報 */}
+                    <div className="mt-6 border-t pt-4">
+                        <h4 className="text-lg font-semibold text-gray-700 mb-2">配送情報</h4>
+                        <div className="space-y-1 text-gray-700">
+                            <div className="flex justify-between">
+                                <span>到着予定日:</span>
+                                <span>{estimatedDate}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>到着予定時刻:</span>
+                                <span>{estimatedTime}</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                {/* 支払い情報とボタン */}
                 <div className="bg-gray-100 p-6 rounded-lg mb-8">
                     <h3 className="text-xl font-semibold text-gray-700 mb-4">支払い情報</h3>
                     <div className="space-y-2 text-gray-700">
@@ -233,48 +269,34 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
 
-                {/* アクションボタン */}
                 <div className="flex flex-wrap justify-end gap-4">
-                    {/* 注文が「DELIVERED」状態の場合のみ注文確定ボタンを表示 */}
-                    {order.status === 'DELIVERED' && (
+                    {order.status === 'DELIVERED' && !isOrderCompleted && (
                         <button
                             onClick={handleConfirmOrder}
-                            className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 ${
-                                order.status === 'COMPLETED'
-                                    ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                                    : 'bg-green-600 hover:bg-green-700 text-white font-bold'
-                            }`}
-                            disabled={order.status === 'COMPLETED'}
+                            className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold`}
                         >
                             <FaCheckCircle /> 注文確定
                         </button>
                     )}
-                    <button
-                        onClick={() => setShowRefundModal(true)}
-                        className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 ${
-                            canRefund
-                                ? 'bg-red-500 hover:bg-red-600 text-white font-bold'
-                                : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                        }`}
-                        disabled={!canRefund}
-                    >
-                        <FaUndo /> 返金申請
-                    </button>
-                    <button
-                        onClick={handleCancelOrder}
-                        className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 ${
-                            canCancel
-                                ? 'bg-gray-500 hover:bg-gray-600 text-white font-bold'
-                                : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                        }`}
-                        disabled={!canCancel}
-                    >
-                        <FaTimesCircle /> 注文をキャンセル
-                    </button>
+                    {canRefund && (
+                        <button
+                            onClick={() => setShowRefundModal(true)}
+                            className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold`}
+                        >
+                            <FaUndo /> 返金申請
+                        </button>
+                    )}
+                    {canCancel && (
+                        <button
+                            onClick={handleCancelOrder}
+                            className={`py-3 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold`}
+                        >
+                            <FaTimesCircle /> 注文をキャンセル
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* 返金モーダル */}
             {showRefundModal && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
                     <div className="relative p-8 bg-white w-96 max-w-md m-auto flex-col flex rounded-lg shadow-xl">
@@ -300,7 +322,6 @@ export default function OrderDetailPage() {
                 </div>
             )}
 
-            {/* Message Modal */}
             {showMessageModal.visible && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
                     <div className="relative p-8 bg-white w-96 max-w-md m-auto flex-col flex rounded-lg shadow-xl">

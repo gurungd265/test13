@@ -138,4 +138,24 @@ public class PointService {
         pointBalance.subtractBalance(amount);
         userPointBalanceRepository.save(pointBalance);
     }
+
+    @Transactional
+    public BigDecimal addPoints(String userId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("追加するポイントは0より大きくなければなりません。");
+        }
+
+        UserPointBalance pointBalance = userPointBalanceRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    UserPointBalance newPointBalance = new UserPointBalance();
+                    newPointBalance.setUserId(userId);
+                    newPointBalance.setBalance(BigDecimal.ZERO);
+                    return userPointBalanceRepository.save(newPointBalance);
+                });
+
+        pointBalance.addBalance(amount);
+        userPointBalanceRepository.save(pointBalance);
+
+        return pointBalance.getBalance();
+    }
 }

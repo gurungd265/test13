@@ -77,4 +77,20 @@ public class PaypayService {
 
         return paypayAccount.getBalance();
     }
+
+    @Transactional
+    public BigDecimal addPaypayBalance(String userId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("환불 금액은 0보다 커야 합니다.");
+        }
+
+        PaypayAccount paypayAccount = paypayAccountRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("PayPay 계정을 찾을 수 없습니다."));
+
+        // 잔고를 더하고 저장
+        paypayAccount.addBalance(amount);
+        paypayAccountRepository.save(paypayAccount);
+
+        return paypayAccount.getBalance();
+    }
 }

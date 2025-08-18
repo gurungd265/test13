@@ -74,6 +74,20 @@ public class OrderController {
         return ResponseEntity.ok(payments);
     }
 
+    @DeleteMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId, Principal principal) {
+        log.info("Cancel order request: orderId={}, user={}", orderId, principal != null ? principal.getName() : "anonymous");
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userEmail = principal.getName();
+
+        orderService.cancelOrder(orderId, userEmail);
+
+        log.info("Order cancelled successfully: orderId={}, user={}", orderId, userEmail);
+        return ResponseEntity.noContent().build();
+    }
+
     // 주문상태별 목록 조회 (관리자 권한)
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -82,19 +96,6 @@ public class OrderController {
         List<OrderResponseDto> orders = orderService.getOrdersByStatus(status);
         log.info("Orders retrieved by status: count={}, status={}", orders.size(), status);
         return ResponseEntity.ok(orders);
-    }
-
-    // 주문 취소
-    @DeleteMapping("/{orderId}/cancel")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId, Principal principal) {
-        log.info("Cancel order request: orderId={}, user={}", orderId, principal != null ? principal.getName() : "anonymous");
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-        String userEmail = principal.getName();
-        orderService.cancelOrder(orderId, userEmail);
-        log.info("Order cancelled successfully: orderId={}, user={}", orderId, userEmail);
-        return ResponseEntity.noContent().build();
     }
 
     // 주문 생성 =======================================================================================================

@@ -64,4 +64,20 @@ public class CardService {
 
         return card.getAvailableCredit(); // 変更された残高を返却
     }
+
+    // 크레딧 잔액을 추가하는 메서드 (환불/취소용)
+    @Transactional
+    public BigDecimal addCreditBalance(String userId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("払い戻し金額は0より大きくなければなりません。");
+        }
+
+        Card card = cardRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("登録済みのクレジットカードが見つかりません。"));
+
+        card.addCredit(amount);
+        cardRepository.save(card);
+
+        return card.getAvailableCredit();
+    }
 }

@@ -78,4 +78,14 @@ public class PaymentController {
         return ResponseEntity.ok(payments);
     }
 
+    @DeleteMapping("/orders/{orderId}")
+    public ResponseEntity<List<PaymentResponseDto>> cancelPaymentsByOrderId(
+            @PathVariable Long orderId
+    ) {
+        log.info("Order-based payment cancellation request received for orderId: {}", orderId);
+        List<PaymentResponseDto> canceledPayments = paymentService.cancelPaymentsByOrderId(orderId);
+        log.info("Payments for order {} cancelled successfully.", orderId);
+        return ResponseEntity.ok(canceledPayments);
+    }
+
 }

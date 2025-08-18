@@ -212,18 +212,15 @@ export default function CheckoutPage() {
             )?.label || '指定なし';
 
         try {
+            // ここから修正された部分
             const orderPayload = {
                 paymentMethod: formData.paymentMethod,
                 billingAddressId: selectedAddressId,
                 shippingAddressId: selectedAddressId,
+                requestedDeliveryAt: `${formData.deliveryDate}T${formData.deliveryTime}`,
             };
 
-            const orderResponse = await orderApi.createOrderFromCart(
-                orderPayload.paymentMethod,
-                orderPayload.billingAddressId,
-                orderPayload.shippingAddressId
-            );
-
+            const orderResponse = await orderApi.createOrderFromCart(orderPayload);
             const orderId = orderResponse.id;
 
             await fetchUserBalancesAndInfo();
@@ -253,7 +250,7 @@ export default function CheckoutPage() {
         } finally {
             setIsOrdering(false);
         }
-    }, [formData, userBalances, totalAmount, navigate, isLoggedIn, user, fetchUserBalancesAndInfo, removePurchasedItems, cartItems, selectedAddressId]);
+    }, [formData, userBalances, totalAmount, navigate, isLoggedIn, user, fetchUserBalancesAndInfo, removePurchasedItems, cartItems, selectedAddressId, DELIVERY_TIME_SLOTS]);
 
     const handleNextStep = useCallback(() => {
         setSubmitError(null);

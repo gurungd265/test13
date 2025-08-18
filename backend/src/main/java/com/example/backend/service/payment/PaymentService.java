@@ -127,13 +127,13 @@ public class PaymentService {
         // 결제 수단에 따라 잔액 복구 로직 호출
         switch (payment.getPaymentMethod()) {
             case POINT:
-                pointService.deductPoints(payment.getUserId(), payment.getAmount());
+                pointService.addPoints(payment.getUserId(), payment.getAmount());
                 break;
             case PAYPAY:
-                paypayService.deductPaypayBalance(payment.getUserId(), payment.getAmount());
+                paypayService.addPaypayBalance(payment.getUserId(), payment.getAmount());
                 break;
             case CREDIT_CARD:
-                cardService.deductCreditBalance(payment.getUserId(), payment.getAmount());
+                cardService.addCreditBalance(payment.getUserId(), payment.getAmount());
                 break;
             default:
                 throw new IllegalArgumentException("サポートされていない支払い方法です。");
@@ -178,11 +178,18 @@ public class PaymentService {
             throw new IllegalArgumentException("返金額が支払額を超えています。");
         }
 
-        // [변경] 외부 결제 시스템 환불 요청 대신, 내부 잔액 복구 로직 필요
-        // 여기서는 간단히 성공으로 가정하고, 실제 구현에서는 각 서비스의 복구 메서드 호출
-        boolean refundSuccess = true; // externalPaymentService.refund(transactionId, refundAmount);
-        if (!refundSuccess) {
-            throw new RuntimeException("返金処理に失敗しました。");
+        switch (payment.getPaymentMethod()) {
+            case POINT:
+                pointService.addPoints(payment.getUserId(), refundAmount);
+                break;
+            case PAYPAY:
+                paypayService.addPaypayBalance(payment.getUserId(), refundAmount);
+                break;
+            case CREDIT_CARD:
+                cardService.addCreditBalance(payment.getUserId(), refundAmount);
+                break;
+            default:
+                throw new IllegalArgumentException("サポートされていない支払い方法です。");
         }
 
         // 6. 결제 엔티티에 환불 금액 업데이트
@@ -212,6 +219,41 @@ public class PaymentService {
 
         // 9. 결제 엔티티를 DTO로 변환하여 반환
         return PaymentResponseDto.fromEntity(payment);
+    }
+
+    @Transactional
+    public List<PaymentResponseDto> cancelPaymentsByOrderId(Long orderId) {
+        log.info("注文ID {} のすべての決済をキャンセルします。", orderId);
+
+        // 1. 주문을 찾습니다.
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("注文が見つかりません: " + orderId));
+
+        // 2. 주문에 연결된 모든 결제 내역을 찾습니다.
+        List<Payment> payments = paymentRepository.findByOrder(order);
+
+        if (payments.isEmpty()) {
+            throw new IllegalStateException("この注文に関連する決済情報が見つかりません。");
+        }
+
+        List<PaymentResponseDto> canceledPayments = payments.stream()
+                .map(payment -> {
+                    try {
+                        // 3. 각각의 결제 내역에 대해 취소 로직을 실행합니다.
+                        return this.cancelPayment(payment.getTransactionId());
+                    } catch (Exception e) {
+                        log.error("決済トランザクションID {} のキャンセル中にエラーが発生しました。", payment.getTransactionId(), e);
+                        throw new RuntimeException("決済キャンセルに失敗しました: " + e.getMessage());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        // 4. 모든 결제가 성공적으로 취소되면 주문 상태를 업데이트합니다.
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        log.info("注文ID {} の決済が正常にキャンセルされました。キャンセルされた件数: {}", orderId, canceledPayments.size());
+        return canceledPayments;
     }
 
     /**
