@@ -8,6 +8,7 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const { login,isLoggedIn } = useAuth();
@@ -23,6 +24,7 @@ function LoginPage() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setLoading(true);
 
     try {
       await login(email,password);
@@ -32,7 +34,7 @@ function LoginPage() {
 
     } catch (err) {
       console.error('ログイン失敗:', err);
-      if (err.response) {
+      if (err.response && err.response.data) {
         // ex: 401 Unauthorized, 400 Bad Request
         setError(err.response.data.message || 'ログインに失敗しました！EmailとかPasswordを確認してください。');
       } else if (err.request) {
@@ -41,6 +43,8 @@ function LoginPage() {
       } else {
         setError('分からないエラーが発生しました');
       }
+    } finally {
+        setLoading(false);
     }
   };
 
