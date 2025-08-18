@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import productsApi from '../api/products';
 import cartApi from '../api/cart';
 import wishlistApi from '../api/wishlist';
+import reviewApi from "../api/review.js";
 import { Heart, X } from "lucide-react";
 import { CartContext } from '../contexts/CartContext';
 import { useAuth } from "../contexts/AuthContext.jsx";
@@ -18,11 +19,19 @@ export default function ProductPage() {
     const { fetchCartCount } = useContext(CartContext);
     const [wished, setWished] = useState(false);
     const { isLoggedIn, loading: authLoading, user } = useAuth();
-    const productRating = product?.rating ?? 0;
-    const productReviewCount = product?.reviewCount ?? 0;
+    const [reviews, setReviews] = useState([]);
+    const [averageRating, setAverageRating] = useState(0);
+    const [reviewCount, setReviewCount] = useState(0);
+
+    const reviewsSectionRef = useRef(null);
+
+    const calculateAverageRating = (reviews) => {
+        if (!reviews || reviews.length === 0) return 0;
+        const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+        return (totalRating / reviews.length).toFixed(1);
+    };
 
     const [optionSets, setOptionSets] = useState([]);
-
     const [currentSelection, setCurrentSelection] = useState({
         options: {},
         quantity: 1
@@ -206,14 +215,24 @@ export default function ProductPage() {
         }
     };
 
+    const scrollToReviews = () => {
+        if (reviewsSectionRef.current) {
+            reviewsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 setLoading(true);
                 const data = await productsApi.getProductById(parseInt(id));
-                // console.log("Product data fetched:", data);
-                // console.log("Product options:", data.options);
                 setProduct(data);
+
+                const reviewData = await reviewApi.getReviewsByProduct(id);
+                setReviews(reviewData.content); // 리뷰 리스트 저장
+                setAverageRating(calculateAverageRating(reviewData.content)); // 평균 별점 계산
+                setReviewCount(reviewData.content.length); // 리뷰 개수 계산
+
                 if (data.images && data.images.length > 0) {
                     setMainImage(data.images[0].imageUrl);
                 }
@@ -361,16 +380,14 @@ export default function ProductPage() {
 
                 {/* Info Section (1/3) */}
                 <div className="lg:sticky lg:top-4 lg:self-start lg:h-auto rounded-lg shadow p-6 space-y-4">
-                    {/* Rating & Reviews (another Options table need. now hardcoding) */}
+                    {/* Rating & Reviews */}
                     <div>
-                        <div className="text-yellow-500 font-bold text-lg">
-                            {/* product.rating '評価なし' */}
-                            ⭐ {product.rating ? product.rating.toFixed(1) : '評価なし'}
+                        <div className="text-2xl font-bold cursor-pointer" onClick={scrollToReviews}>
+                            {reviewCount > 0 ? averageRating : '評価なし'}⭐
                         </div>
-                        <div className="text-sm text-gray-600">
-                            {product.reviewCount ? `${product.reviewCount} レビュー` : 'レビューなし'} • 100件以上注文されました {/* 일본어 변경 */}
-                        </div>
+                        <div>{reviewCount} 件のレビュー</div>
                     </div>
+
 
                     {/* Price */}
                     {product.discountPrice !== null && product.discountPrice !== undefined && (
@@ -483,7 +500,7 @@ export default function ProductPage() {
             </div>
 
             {/* 상품 리뷰 목록 컴포넌트 추가 */}
-            <div className="lg:col-span-2 mt-8">
+            <div ref={reviewsSectionRef} className="lg:col-span-2 mt-8">
                 <ProductReviewList
                     productId={parseInt(id, 10)}
                     currentUser={user?.email}
