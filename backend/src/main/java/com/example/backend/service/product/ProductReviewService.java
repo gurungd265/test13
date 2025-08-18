@@ -73,15 +73,13 @@ public class ProductReviewService {
 
     // 리뷰 수정
     @Transactional
-    public void updateReview(ProductReviewDto dto, Long currentUserId) {
+    public void updateReview(ProductReviewDto dto, String email) {
         ProductReview review = reviewRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("レビューが見つかりません。"));
 
-        // 리뷰 작성자와 로그인된 사용자가 같은지 확인
-        if (!review.getUser().getId().equals(currentUserId)) {
+        if (!review.getUser().getEmail().equals(email)) {
             throw new AccessDeniedException("レビューの編集権限がありません。");
         }
-
 
         review.setRating(dto.getRating());
         review.setReviewText(dto.getReviewText());
@@ -90,17 +88,16 @@ public class ProductReviewService {
 
     // 리뷰 삭제
     @Transactional
-    public void softDeleteReview(ProductReviewDto dto, Long currentUserId) {
+    public void softDeleteReview(ProductReviewDto dto, String email) {
         ProductReview review = reviewRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("レビューが見つかりません。"));
 
-        // 리뷰 작성자와 로그인된 사용자가 같은지 확인
-        if (!review.getUser().getId().equals(currentUserId)) {
+        if (!review.getUser().getEmail().equals(email)) {
             throw new AccessDeniedException("レビューの削除権限がありません。");
         }
 
-        // 소프트 삭제 처리
-        review.setDeletedAt(java.time.LocalDateTime.now());
+        review.setDeletedAt(LocalDateTime.now());
         reviewRepository.save(review);
     }
+
 }

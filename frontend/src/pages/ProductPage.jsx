@@ -17,7 +17,7 @@ export default function ProductPage() {
     const [mainImage, setMainImage] = useState('');
     const { fetchCartCount } = useContext(CartContext);
     const [wished, setWished] = useState(false);
-    const { isLoggedIn, loading: authLoading } = useAuth();
+    const { isLoggedIn, loading: authLoading, user } = useAuth();
     const productRating = product?.rating ?? 0;
     const productReviewCount = product?.reviewCount ?? 0;
 
@@ -488,7 +488,10 @@ export default function ProductPage() {
 
             {/* 상품 리뷰 목록 컴포넌트 추가 */}
             <div className="lg:col-span-2 mt-8">
-                <ProductReviewList productId={parseInt(id, 10)} />
+                <ProductReviewList
+                    productId={parseInt(id, 10)}
+                    currentUser={user?.email}
+                />
             </div>
         </div>
     );

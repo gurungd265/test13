@@ -1,7 +1,7 @@
 import api from './index';  // axios
 
 const reviewApi = {
-    addReview: async (reviewData, token) => {
+    addReview: async (reviewData) => {
         try {
             const response = await api.post(
                 `/api/products/${reviewData.productId}/reviews`,
@@ -26,7 +26,7 @@ const reviewApi = {
                     params: { page, size, sort }
                 }
             );
-            console.log('Reviews response:', response);
+            // console.log('Reviews response:', response);
             return response.data; // { content: [...], totalPages, totalElements, ... }
         } catch (error) {
             console.error('Failed to fetch reviews:', error);
@@ -34,7 +34,7 @@ const reviewApi = {
         }
     },
 
-    getReviewsByUser: async (userId, page = 0, size = 10, sort = 'createdAt,desc', token) => {
+    getReviewsByUser: async (userId, page = 0, size = 10, sort = 'createdAt,desc') => {
         try {
             const response = await api.get(
                 `/api/products/reviews/user/${userId}`,
@@ -49,6 +49,35 @@ const reviewApi = {
             throw error;
         }
     },
+
+    updateReview: async (reviewData) => {
+        try {
+            const { productId, id: reviewId } = reviewData;
+            const response = await api.put(
+                `/api/products/${productId}/reviews/${reviewId}`,
+                reviewData
+            );
+            console.log('Review updated:', response);
+            return response.status === 204;
+        } catch (error) {
+            console.error('Failed to update review:', error);
+            throw error;
+        }
+    },
+
+    deleteReview: async (productId, reviewId) => {
+        try {
+            const response = await api.delete(
+                `/api/products/${productId}/reviews/${reviewId}`,
+            );
+            console.log('Review deleted:', response);
+            return response.status === 204;
+        } catch (error) {
+            console.error('Failed to delete review:', error);
+            throw error;
+        }
+    },
+
 };
 
 export default reviewApi;

@@ -61,8 +61,7 @@ public class ProductReviewController {
     ) {
         dto.setProductId(productId);
         dto.setId(reviewId);
-        Long currentUserId = Long.valueOf(userDetails.getUsername());
-        reviewService.updateReview(dto, currentUserId);
+        reviewService.updateReview(dto, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 
@@ -76,8 +75,8 @@ public class ProductReviewController {
         ProductReviewDto dto = new ProductReviewDto();
         dto.setProductId(productId);
         dto.setId(reviewId);
-        // 로그인한 사용자의 ID를 전달하여 권한 검증
-        reviewService.softDeleteReview(dto, Long.valueOf(userDetails.getUsername()));
+        String currentUserEmail = userDetails.getUsername();
+        reviewService.softDeleteReview(dto, currentUserEmail);
         return ResponseEntity.noContent().build();
     }
 }
