@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import axios from "axios";
-import MobileBottomNavigation from "./MobileBottomNavigation.jsx";
+// import MobileBottomNavigation from "./MobileBottomNavigation.jsx";
 
 export default function MobileSearch({ setIsCatalogOpen }) {
     const [categories, setCategories] = useState([]);
@@ -84,7 +84,7 @@ export default function MobileSearch({ setIsCatalogOpen }) {
                 </ul>
             </div>
 
-            <MobileBottomNavigation setIsCatalogOpen={setIsCatalogOpen}/>
+            {/* <MobileBottomNavigation setIsCatalogOpen={setIsCatalogOpen}/> */}
         </div>
     );
 }
