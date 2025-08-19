@@ -120,18 +120,9 @@ export default function OrderDetailPage() {
     /**
      * 返金処理
      */
-    const handleRefund = useCallback(async () => {
+    const handleRefundRequest = useCallback(async () => {
         try {
-            const userId = order.userId;
-            const refundAmount = calculatedTotals.totalAmount;
-
-            if (!userId || refundAmount <= 0) {
-                showMessage("返金に必要な情報が不足しています。");
-                return;
-            }
-
-            await refundPointsToPayPay(userId, refundAmount);
-            await orderApi.updateOrderStatus(order.orderNumber, 'REFUND_REQUESTED');
+            await orderApi.requestRefund(order.orderNumber);
 
             setShowRefundModal(false);
             showMessage("返金申請が完了しました。");
@@ -139,7 +130,7 @@ export default function OrderDetailPage() {
         } catch (err) {
             showMessage("返金申請処理に失敗しました。");
         }
-    }, [order, calculatedTotals, showMessage, loadOrder]);
+    }, [order, showMessage, loadOrder]);
 
     /**
      * レビューページへのナビゲート
@@ -179,7 +170,7 @@ export default function OrderDetailPage() {
 
     const isCompleted = order.status === 'COMPLETED';
     const isDelivered = order.status === 'DELIVERED';
-    const canCancel = ['PENDING', 'PROCESSING', 'SHIPPED'].includes(order.status);
+    const canCancel = ['PENDING', 'PROCESSING'].includes(order.status);
     const canRefund = isCompleted && order.completedAt && (new Date().getTime() - new Date(order.completedAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
 
     const timeLeftForCompletion = (() => {
@@ -340,7 +331,7 @@ export default function OrderDetailPage() {
                                 キャンセル
                             </button>
                             <button
-                                onClick={handleRefund}
+                                onClick={handleRefundRequest}
                                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                             >
                                 申請する

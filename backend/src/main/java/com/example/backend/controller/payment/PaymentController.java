@@ -59,6 +59,7 @@ public class PaymentController {
 
     // 환불 처리
     @PostMapping("/refund/{transactionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaymentResponseDto> refundPayment(
             @PathVariable String transactionId,
             @RequestParam BigDecimal refundAmount) {

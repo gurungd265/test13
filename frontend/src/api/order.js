@@ -64,6 +64,16 @@ const orderApi = {
             throw error;
         }
     },
+
+    requestRefund: async (orderNumber) => {
+        try {
+            const response = await api.post(`/api/orders/${orderNumber}/refund-request`);
+            return response.data;
+        } catch (error) {
+            console.error("Error requesting refund:", error);
+            throw error;
+       }
+    }
 };
 
 export default orderApi;

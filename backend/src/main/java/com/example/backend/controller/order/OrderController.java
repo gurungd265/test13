@@ -38,7 +38,6 @@ public class OrderController {
     // 주문 목록 조회 (로그인 유저 기준)
     @GetMapping
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(Principal principal) {
-        log.info("Get orders request by user: {}", principal != null ? principal.getName() : "anonymous");
         if (principal == null) {
             return ResponseEntity.status(401).build();
         }
@@ -84,7 +83,6 @@ public class OrderController {
 
         orderService.cancelOrder(orderId, userEmail);
 
-        log.info("Order cancelled successfully: orderId={}, user={}", orderId, userEmail);
         return ResponseEntity.noContent().build();
     }
 
@@ -147,5 +145,21 @@ public class OrderController {
         orderService.updateOrderStatus(userEmail, orderNumber, newStatus);
 
         return ResponseEntity.ok().build();
+    }
+
+    // 사용자의 환불 요청을 접수하는 엔드포인트 (일반 사용자 접근 가능)
+    @PostMapping("/{orderNumber}/refund-request")
+    public ResponseEntity<Void> requestRefund(@PathVariable String orderNumber, Principal principal) {
+        log.info("Refund request received from user: {}, for order: {}", principal.getName(), orderNumber);
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        String userEmail = principal.getName();
+
+        // ⚠️ 주문의 상태를 '환불 요청' 상태로 변경하는 서비스 로직 호출
+        orderService.requestRefund(userEmail, orderNumber);
+
+        log.info("Refund request for order {} submitted successfully.", orderNumber);
+        return ResponseEntity.noContent().build();
     }
 }

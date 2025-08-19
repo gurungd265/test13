@@ -250,6 +250,27 @@ public class OrderService {
         return convertToDto(order);
     }
 
+    @Transactional
+    public void requestRefund(String userEmail, String orderNumber) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new EntityNotFoundException("注文が見つかりません。"));
+
+        // 1. 해당 주문이 요청한 사용자의 것인지 확인
+        if (!order.getUser().getEmail().equals(userEmail)) {
+            throw new AccessDeniedException("この注文に対するアクセス権限がありません。");
+        }
+
+        // 2. 환불 요청이 가능한 상태인지 확인
+        // 예: COMPLETED 상태의 주문만 환불 요청 가능
+        if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new IllegalStateException("返金は、完了した注文に対してのみ申請できます。");
+        }
+
+        // 3. 주문 상태를 '환불 요청'으로 변경
+        order.setStatus(OrderStatus.REFUNDED); // OrderStatus.REFUNDED 로 변경합니다. (REFUND_REQUESTED가 없으므로)
+        orderRepository.save(order);
+    }
+
     private Order buildOrderFromCart(CartDto cartDto, User user) {
         Order order = baseOrderSetup(user);
         List<OrderItem> orderItems = new ArrayList<>();

@@ -164,20 +164,21 @@ public class PaymentService {
         Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException("決済が見つかりません。"));
 
-        // 2. 이미 전액 환불된 상태라면 추가 환불 불가, 예외 발생
+        // 2. 환불 수수료를 계산 (예시: 10%)
+        BigDecimal refundFeeRate = new BigDecimal("0.10"); // 환불 수수료율 10%
+        BigDecimal refundFee = refundAmount.multiply(refundFeeRate);
+
+        // 3. 실제 환불 금액은 요청 금액에서 수수료를 뺀 금액
+        BigDecimal finalRefundAmount = refundAmount.subtract(refundFee);
+
+        // 4. 이미 전액 환불된 상태이거나, 총 환불액이 결제액을 초과하는지 등 기존 로직 수행
         if (payment.getStatus() == PaymentStatus.REFUNDED) {
             throw new IllegalStateException("既に全額返金されています。");
         }
 
-        // 3. 기존 환불 금액에 이번 환불 요청 금액을 더함 (기존 환불 없으면 이번 금액 그대로)
         BigDecimal newRefundAmount = payment.getRefundAmount() == null
-                ? refundAmount
-                : payment.getRefundAmount().add(refundAmount);
-
-        // 4. 환불 총액이 결제 금액을 초과하면 예외 발생
-        if (newRefundAmount.compareTo(payment.getAmount()) > 0) {
-            throw new IllegalArgumentException("返金額が支払額を超えています。");
-        }
+                ? finalRefundAmount
+                : payment.getRefundAmount().add(finalRefundAmount);
 
         switch (payment.getPaymentMethod()) {
             case POINT:
