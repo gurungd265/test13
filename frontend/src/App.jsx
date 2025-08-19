@@ -26,6 +26,7 @@ import { AuthContext } from "./contexts/AuthContext";
 import OrderHistoryPage from './pages/orders/OrderHistoryPage.jsx';
 import OrderDetailPage from './pages/orders/OrderDetailPage';
 import ReviewPage from './pages/ReviewPage.jsx';
+import Promotions from "./components/Promotions.jsx";
 
 
 const ProtectedRoute = ({ requiresAuth = false, onlyUnauthenticated = false, redirectPath = '/' }) => {
@@ -71,7 +72,8 @@ function AppContent() {
 
         {/* Routing Area */}
         <main className="min-h-screen pb-20">
-        {/* public */}
+            <Promotions/>
+            {/* public */}
             <Routes>
                 <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<Products />} />
