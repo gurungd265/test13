@@ -211,13 +211,29 @@ export default function CheckoutPage() {
                 (slot) => slot.value === formData.deliveryTime
             )?.label || '指定なし';
 
+        const formatDeliveryTime = (timeSlot) => {
+            switch (timeSlot) {
+                case 'morning':
+                    return 'T08:00:00';
+                case 'afternoon':
+                    return 'T14:00:00';
+                case 'evening':
+                    return 'T16:00:00';
+                case 'night':
+                    return 'T18:00:00';
+                default:
+                    return 'T00:00:00';
+            }
+        };
+
         try {
+            const requestedDeliveryDateTime = formData.deliveryDate + formatDeliveryTime(formData.deliveryTime);
             // ここから修正された部分
             const orderPayload = {
                 paymentMethod: formData.paymentMethod,
                 billingAddressId: selectedAddressId,
                 shippingAddressId: selectedAddressId,
-                requestedDeliveryAt: `${formData.deliveryDate}T${formData.deliveryTime}`,
+                requestedDeliveryAt: requestedDeliveryDateTime,
             };
 
             const orderResponse = await orderApi.createOrderFromCart(orderPayload);
@@ -250,7 +266,7 @@ export default function CheckoutPage() {
         } finally {
             setIsOrdering(false);
         }
-    }, [formData, userBalances, totalAmount, navigate, isLoggedIn, user, fetchUserBalancesAndInfo, removePurchasedItems, cartItems, selectedAddressId, DELIVERY_TIME_SLOTS]);
+    }, [formData, userBalances, totalAmount, navigate, isLoggedIn, user, fetchUserBalancesAndInfo, removePurchasedItems, cartItems, selectedAddressId]);
 
     const handleNextStep = useCallback(() => {
         setSubmitError(null);

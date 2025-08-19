@@ -90,20 +90,21 @@ public class OrderService {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new EntityNotFoundException("注文番号が見つかりません: " + orderNumber));
 
-        // **이메일을 통해 주문의 소유권을 확인하는 로직 추가**
+        // 注文ステータスの変更は通常、管理者のみが可能
+        // 이 로직은 백엔드 Security Context에서 로그인한 사용자의 역할을 확인하도록 확장
         if (!order.getUser().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("この注文へのアクセス権がありません。");
         }
 
-        // ... 기존 상태 변경 로직
-        order.setStatus(newStatus);
-
+        // 新しいステータスに基づいて、特定のフィールドを更新します。
+        // PROCESSING ステータスは時間の記録を必要としません。
         if (newStatus == OrderStatus.DELIVERED) {
             order.setDeliveredAt(LocalDateTime.now());
         } else if (newStatus == OrderStatus.COMPLETED) {
             order.setCompletedAt(LocalDateTime.now());
         }
 
+        order.setStatus(newStatus);
         orderRepository.save(order);
     }
 
@@ -112,7 +113,9 @@ public class OrderService {
         Order order = orderRepository.findByIdAndUserEmail(orderId, userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("注文が存在しないか、アクセス権限がありません。"));
 
-        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.COMPLETED) {
+        // 상품 준비중(PROCESSING) 상태의 주문은 취소 가능하도록 로직을 변경
+        // SHIPPED, DELIVERED, COMPLETED 상태는 취소가 불가능
+        if (order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.COMPLETED) {
             throw new IllegalStateException("この注文はキャンセルできません。");
         }
 
@@ -228,7 +231,6 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("請求先住所が見つかりません。"));
         order.setBillingAddress(billingAddress);
 
-        // 주문 생성 시 희망 배송 날짜/시간 저장
         order.setRequestedDeliveryAt(requestDto.getRequestedDeliveryAt());
 
         orderRepository.save(order);

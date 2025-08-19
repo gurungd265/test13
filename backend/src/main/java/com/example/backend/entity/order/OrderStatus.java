@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum OrderStatus {
     PENDING,            // 승인 대기
-    COMPLETED,          // 상품 준비중 (주문 완료)
+    PROCESSING,         // 상품 준비중
+    COMPLETED,          // 주문 확정
     SHIPPED,            // 배송 중
     DELIVERED,          // 배송 완료
     REFUNDED,           // 전액 환불
