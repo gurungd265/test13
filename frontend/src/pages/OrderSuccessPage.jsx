@@ -3,11 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { CheckCircle, ShoppingBag, Home, ShoppingCart, Truck, CreditCard, User, Box, Clock } from 'lucide-react';
 import orderApi from '../api/order';
+import useDeliveryOptions from '../hooks/useDeliveryOptions';
 
 export default function OrderSuccess() {
     const { state } = useLocation();
     const navigate = useNavigate();
     const { user, isLoggedIn } = useAuth();
+
+    const { DELIVERY_TIME_SLOTS } = useDeliveryOptions();
 
     const orderIdFromState = state?.orderId;
     const [fetchedOrderDetails, setFetchedOrderDetails] = useState(null);
@@ -17,14 +20,23 @@ export default function OrderSuccess() {
     const formatDeliveryInfo = (dateTimeString) => {
         if (!dateTimeString) return { date: '指定なし', time: '指定なし' };
         try {
-            const [datePart, timePart] = dateTimeString.split('T');
-            const timeLabel = {
-                '08:00': '午前中 (8-12時)',
-                '14:00': '14-16時',
-                '16:00': '16-18時',
-                '18:00': '18-21時',
-            }[timePart.substring(0, 5)] || timePart.substring(0, 5); // Fallback to raw time
+            const dateObj = new Date(dateTimeString);
 
+            const datePart = dateObj.toISOString().split('T')[0];
+
+            const hour = dateObj.getHours().toString().padStart(2, '0');
+            const minute = dateObj.getMinutes().toString().padStart(2, '0');
+            const timeKey = `${hour}:${minute}`;
+
+            const deliveryTimeSlot = DELIVERY_TIME_SLOTS.find(slot => {
+                if (slot.value === 'morning' && timeKey === '08:00') return true;
+                if (slot.value === 'afternoon' && timeKey === '14:00') return true;
+                if (slot.value === 'evening' && timeKey === '16:00') return true;
+                if (slot.value === 'night' && timeKey === '18:00') return true;
+                return false;
+            });
+
+            const timeLabel = deliveryTimeSlot?.label || timeKey;
             return { date: datePart, time: timeLabel };
         } catch (e) {
             console.error("Failed to parse date-time string:", e);

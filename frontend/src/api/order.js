@@ -33,13 +33,9 @@ const orderApi = {
         }
     },
 
-    createOrderFromCart: async (paymentMethod, billingAddressId, shippingAddressId) => {
+    createOrderFromCart: async (orderPayload) => {
         try {
-            const response = await api.post('/api/orders/cart', {
-                paymentMethod,
-                billingAddressId,
-                shippingAddressId
-            });
+            const response = await api.post('/api/orders/cart', orderPayload);
             return response.data; // OrderResponseDto
         } catch (error) {
             console.error('カートからの注文作成に失敗しました。', error);
