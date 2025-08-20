@@ -37,7 +37,7 @@ const reviewApi = {
     getReviewsByUser: async (userId, page = 0, size = 10, sort = 'createdAt,desc') => {
         try {
             const response = await api.get(
-                `/api/products/reviews/user/${userId}`,
+                `/api/reviews/user/${userId}`,
                 {
                     params: { page, size, sort }
                 }

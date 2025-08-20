@@ -57,6 +57,13 @@ export default function AccountSidebar({ user, onClose, onLogout }) {
                                         お気に入り
                                     </Link>
                                     <Link
+                                        to="/my-reviews"
+                                        className="block p-3 hover:bg-gray-100 rounded-lg"
+                                        onClick={onClose}
+                                    >
+                                        レビュー管理
+                                    </Link>
+                                    <Link
                                         to="/profile"
                                         className="block p-3 hover:bg-gray-100 rounded-lg"
                                         onClick={onClose}

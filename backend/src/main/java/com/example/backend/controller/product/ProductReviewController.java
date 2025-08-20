@@ -41,16 +41,6 @@ public class ProductReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-    // 유저별 리뷰 목록 조회 (페이징)
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<ProductReviewDto>> getReviewsByUser(
-            @PathVariable Long userId,
-            Pageable pageable
-    ) {
-        Page<ProductReviewDto> reviews = reviewService.getReviewsByUser(userId, pageable);
-        return ResponseEntity.ok(reviews);
-    }
-
     // 리뷰 수정
     @PutMapping("/{reviewId}")
     public ResponseEntity<Void> updateReview(
