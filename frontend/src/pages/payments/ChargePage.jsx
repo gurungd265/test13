@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faCreditCard, faMobileAlt, faArrowLeft, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
-import * as virtualPaymentsApi from '../api/virtualPayments';
-import * as paymentRegistrationApi from '../api/paymentRegistration';
+import * as virtualPaymentsApi from '../../api/virtualPayments.js';
+import * as paymentRegistrationApi from '../../api/paymentRegistration.js';
 
 export default function ChargePage() {
     const { user, isLoggedIn } = useAuth();

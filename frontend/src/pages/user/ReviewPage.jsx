@@ -1,6 +1,6 @@
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState } from "react";
-import reviewApi from '../api/review';
+import reviewApi from '../../api/review.js';
 
 const ReviewPage = () => {
     const { productId } = useParams();  // URL에서 productId를 추출

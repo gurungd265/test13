@@ -1,11 +1,11 @@
 import {Link} from "react-router-dom";
 import {useContext} from "react";
-import cartApi from "../api/cart";
-import {CartContext} from "../contexts/CartContext";
+import cartApi from "../../api/cart.js";
+import {CartContext} from "../../contexts/CartContext.jsx";
 import {Heart} from "lucide-react";
 import {useState, useEffect} from "react";
-import wishlistApi from "../api/wishlist";
-import {useAuth} from "../contexts/AuthContext";
+import wishlistApi from "../../api/wishlist.js";
+import {useAuth} from "../../contexts/AuthContext.jsx";
 
 export default function Product({product}) {
     useEffect(() => {

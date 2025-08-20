@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import productsApi from "../api/products";
-import wishlistApi from "../api/wishlist";
-import cartApi from "../api/cart";
-import { useAuth } from "../contexts/AuthContext";
+import productsApi from "../../api/products.js";
+import wishlistApi from "../../api/wishlist.js";
+import cartApi from "../../api/cart.js";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 import { Heart } from "lucide-react";
 
 export default function WishesPage() {

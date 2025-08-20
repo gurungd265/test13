@@ -1,32 +1,32 @@
 import React, { useState } from 'react';
-import {BrowserRouter as Router, Routes, Route, Navigate, Outlet} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, matchPath } from 'react-router-dom';
 import Header from './components/header/Index.jsx';
 import MobileBottomNavigation from './components/mobile/MobileBottomNavigation.jsx';
-import MobileSearchPage from './pages/MobileSearchPage';
-import ProductPage from './pages/ProductPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import WishesPage from './pages/WishesPage';
-import Products from './components/Products';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import MobileSearchPage from './pages/products/MobileSearchPage.jsx';
+import ProductPage from './pages/products/ProductPage.jsx';
+import CartPage from './pages/carts/CartPage.jsx';
+import CheckoutPage from './pages/payments/CheckoutPage.jsx';
+import WishesPage from './pages/user/WishesPage.jsx';
+import Products from './components/product/Products.jsx';
+import LoginPage from './pages/user/LoginPage.jsx';
+import SignupPage from './pages/user/SignupPage.jsx';
 import { AuthProvider,useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext.jsx';
 import { CategoryProvider } from "./contexts/CategoryContext.jsx";
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/user/ProfilePage.jsx';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import FilteredProductPage from "./pages/FilteredProductPage.jsx";
-import MyPointPage from './pages/MyPointPage';
-import PaymentRegistrationPage from './pages/PaymentRegistrationPage';
-import ChargePage from './pages/ChargePage';
-import PaypayBalancePage from './pages/PaypayBalancePage';
-import CardBalancePage from './pages/CardBalancePage';
-import OrderSuccessPage from './pages/OrderSuccessPage';
+import FilteredProductPage from "./pages/products/FilteredProductPage.jsx";
+import MyPointPage from './pages/payments/MyPointPage.jsx';
+import PaymentRegistrationPage from './pages/payments/PaymentRegistrationPage.jsx';
+import ChargePage from './pages/payments/ChargePage.jsx';
+import PaypayBalancePage from './pages/payments/PaypayBalancePage.jsx';
+import CardBalancePage from './pages/payments/CardBalancePage.jsx';
+import OrderSuccessPage from './pages/orders/OrderSuccessPage.jsx';
 import { AuthContext } from "./contexts/AuthContext";
 import OrderHistoryPage from './pages/orders/OrderHistoryPage.jsx';
 import OrderDetailPage from './pages/orders/OrderDetailPage';
-import ReviewPage from './pages/ReviewPage.jsx';
-import Promotions from "./components/Promotions.jsx";
+import ReviewPage from './pages/user/ReviewPage.jsx';
+import Promotions from "./components/product/Promotions.jsx";
 
 
 const ProtectedRoute = ({ requiresAuth = false, onlyUnauthenticated = false, redirectPath = '/' }) => {
@@ -53,6 +53,14 @@ const ProtectedRoute = ({ requiresAuth = false, onlyUnauthenticated = false, red
 
 function AppContent() {
 
+    const location = useLocation();
+
+    const promotionPaths = [
+        "/",
+    ]
+
+    const shouldShowPromotions = promotionPaths.some(path => matchPath(path, location.pathname));
+
     const { user, logout } = useAuth(); // user 정보와 logout 함수
 
     const [isCatalogOpen, setIsCatalogOpen] = useState(false); // 상태 선언 추가
@@ -72,7 +80,7 @@ function AppContent() {
 
         {/* Routing Area */}
         <main className="min-h-screen pb-20">
-            <Promotions/>
+            {shouldShowPromotions && <Promotions />}
             {/* public */}
             <Routes>
                 <Route element={<ProtectedRoute />}>

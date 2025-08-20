@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCreditCard, faMobileAlt, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
-import * as paymentRegistrationApi from '../api/paymentRegistration';
-import PaypayRegistrationForm from '../components/payment/PaypayRegistrationForm';
-import CreditCardRegistrationForm from '../components/payment/CreditCardRegistrationForm';
+import * as paymentRegistrationApi from '../../api/paymentRegistration.js';
+import PaypayRegistrationForm from '../../components/payment/PaypayRegistrationForm.jsx';
+import CreditCardRegistrationForm from '../../components/payment/CreditCardRegistrationForm.jsx';
 
 export default function PaymentRegistrationPage() {
     const { user, isLoggedIn } = useAuth();

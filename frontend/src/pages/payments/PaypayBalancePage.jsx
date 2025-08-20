@@ -1,39 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCreditCard, faPlusCircle, faArrowLeft, faWallet } from '@fortawesome/free-solid-svg-icons';
-import * as paymentRegistrationApi from '../api/paymentRegistration';
+import { faMobileAlt, faPlusCircle, faArrowLeft, faWallet } from '@fortawesome/free-solid-svg-icons';
+import * as paymentRegistrationApi from '../../api/paymentRegistration.js';
 
-export default function CardBalancePage() { // ファイル名を変更
+export default function PaypayBalancePage() { // ファイル名を変更
     const { user, isLoggedIn } = useAuth();
     const navigate = useNavigate();
-    const [creditCardInfo, setCreditCardInfo] = useState(null);
-    const [topUpAmount, setTopUpAmount] = useState(10000);
+    const [paypayAccountInfo, setPaypayAccountInfo] = useState(null);
+    const [topUpAmount, setTopUpAmount] = useState(1000);
     const [isLoading, setIsLoading] = useState(true);
     const [isTopUpLoading, setIsTopUpLoading] = useState(false);
     const [error, setError] = useState(null);
     const [topUpError, setTopUpError] = useState(null);
 
-    const fetchCreditCardInfo = async () => {
+    const fetchPaypayInfo = async () => {
         if (!isLoggedIn || !user) {
             setIsLoading(false);
             return;
         }
         try {
-            const info = await paymentRegistrationApi.fetchRegisteredCard(user.email);
-            setCreditCardInfo(info);
+            const info = await paymentRegistrationApi.fetchRegisteredPayPay(user.email);
+            setPaypayAccountInfo(info);
             setError(null);
         } catch (err) {
-            console.error("クレジットカード情報取得に失敗しました:", err);
-            setError('クレジットカード情報の読み込みに失敗しました。');
+            console.error("PayPay情報取得に失敗しました:", err);
+            setError('PayPayアカウント情報の読み込みに失敗しました。');
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchCreditCardInfo();
+        fetchPaypayInfo();
     }, [isLoggedIn, user]);
 
     const handleTopUp = async () => {
@@ -50,19 +50,19 @@ export default function CardBalancePage() { // ファイル名を変更
             setIsTopUpLoading(false);
             return;
         }
-        if (!creditCardInfo) {
-            setTopUpError('クレジットカードが登録されていません。');
+        if (!paypayAccountInfo) {
+            setTopUpError('PayPayアカウントが登録されていません。');
             setIsTopUpLoading(false);
             return;
         }
 
         try {
-            const response = await paymentRegistrationApi.topUpCardBalance(user.email, topUpAmount);
-            alert(`${topUpAmount}円分のクレジットカード利用可能残高をチャージしました。現在の残高: ${response.newAvailableCredit.toLocaleString()}円`);
-            await fetchCreditCardInfo();
-            setTopUpAmount(10000);
+            const response = await paymentRegistrationApi.topUpPaypayBalance(user.email, topUpAmount);
+            alert(`${topUpAmount}円分のPayPay残高をチャージしました。現在の残高: ${response.newBalance.toLocaleString()}円`);
+            await fetchPaypayInfo();
+            setTopUpAmount(1000);
         } catch (err) {
-            console.error("クレジットカード残高チャージに失敗しました:", err);
+            console.error("PayPay残高チャージに失敗しました:", err);
             setTopUpError(err.response?.data?.error || 'チャージ中にエラーが発生しました。');
         } finally {
             setIsTopUpLoading(false);
@@ -93,7 +93,7 @@ export default function CardBalancePage() { // ファイル名を変更
     return (
         <div className="container mx-auto px-4 py-12 max-w-2xl">
             <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-100 space-y-8">
-                <h1 className="text-3xl font-bold text-gray-800 border-b pb-4">クレジットカード残高管理</h1>
+                <h1 className="text-3xl font-bold text-gray-800 border-b pb-4">PayPay残高管理</h1>
 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
@@ -101,21 +101,20 @@ export default function CardBalancePage() { // ファイル名を変更
                     </div>
                 )}
 
-                {creditCardInfo ? (
+                {paypayAccountInfo ? (
                     <div className="space-y-6">
-                        {/* Card */}
+                        {/* PayPay 情報 */}
                         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
-                            <FontAwesomeIcon icon={faCreditCard} className="text-blue-500 text-4xl mb-3" />
-                            <p className="text-xl font-semibold text-gray-800">カード会社: <span className="font-bold">{creditCardInfo.cardCompanyName}</span></p>
-                            <p className="text-lg text-gray-700">カード番号: <span className="font-bold">{creditCardInfo.maskedCardNumber}</span></p>
-                            <p className="text-3xl font-bold text-blue-600 mt-2">現在の仮想残高: {creditCardInfo.availableCredit.toLocaleString()} 円</p>
+                            <FontAwesomeIcon icon={faMobileAlt} className="text-blue-500 text-4xl mb-3" />
+                            <p className="text-xl font-semibold text-gray-800">PayPay ID: <span className="font-bold">{paypayAccountInfo.paypayId}</span></p>
+                            <p className="text-3xl font-bold text-blue-600 mt-2">現在の仮想残高: {paypayAccountInfo.balance.toLocaleString()} 円</p>
                         </div>
 
-                        {/* Card Charge */}
+                        {/* PayPay Charge */}
                         <div className="space-y-4 pt-4 border-t border-gray-200">
                             <h2 className="text-xl font-bold text-gray-700">仮想残高チャージ</h2>
                             <p className="text-sm text-gray-500">
-                                ※ クレジットカードの仮想利用可能残高を増やします。
+                                ※ PayPayアカウントの仮想残高を増やします。
                             </p>
                             {topUpError && (
                                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative text-sm" role="alert">
@@ -129,7 +128,7 @@ export default function CardBalancePage() { // ファイル名を変更
                                     onChange={(e) => setTopUpAmount(parseInt(e.target.value))}
                                     className="flex-grow p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
                                     min="1"
-                                    step="10000"
+                                    step="1000"
                                 />
                                 <button
                                     onClick={handleTopUp}
@@ -143,12 +142,12 @@ export default function CardBalancePage() { // ファイル名を変更
                     </div>
                 ) : (
                     <div className="text-center bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <p className="text-lg text-gray-700 mb-4">クレジットカードは登録されていません。</p>
+                        <p className="text-lg text-gray-700 mb-4">PayPayアカウントは登録されていません。</p>
                         <Link
-                            to="/payment-registration?method=creditCard"
+                            to="/payment-registration?method=paypay"
                             className="inline-block px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors"
                         >
-                            クレジットカードを登録する
+                            PayPayを登録する
                         </Link>
                     </div>
                 )}

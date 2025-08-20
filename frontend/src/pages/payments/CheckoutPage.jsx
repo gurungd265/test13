@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import orderApi from '../api/order';
-import * as virtualPaymentsApi from '../api/virtualPayments';
-import * as paymentRegistrationApi from '../api/paymentRegistration';
-import useCheckoutData from '../hooks/useCheckoutData';
-import useDeliveryOptions from '../hooks/useDeliveryOptions';
-import CheckoutCustomerInfo from '../components/checkout/CheckoutCustomerInfo';
-import CheckoutAddressSelection from '../components/checkout/CheckoutAddressSelection';
-import CheckoutDeliveryOptions from '../components/checkout/CheckoutDeliveryOptions';
-import CheckoutPaymentMethods from '../components/checkout/CheckoutPaymentMethods';
-import CheckoutOrderSummary from '../components/checkout/CheckoutOrderSummary';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import orderApi from '../../api/order.js';
+import * as virtualPaymentsApi from '../../api/virtualPayments.js';
+import * as paymentRegistrationApi from '../../api/paymentRegistration.js';
+import useCheckoutData from '../../hooks/useCheckoutData.js';
+import useDeliveryOptions from '../../hooks/useDeliveryOptions.js';
+import CheckoutCustomerInfo from '../../components/checkout/CheckoutCustomerInfo.jsx';
+import CheckoutAddressSelection from '../../components/checkout/CheckoutAddressSelection.jsx';
+import CheckoutDeliveryOptions from '../../components/checkout/CheckoutDeliveryOptions.jsx';
+import CheckoutPaymentMethods from '../../components/checkout/CheckoutPaymentMethods.jsx';
+import CheckoutOrderSummary from '../../components/checkout/CheckoutOrderSummary.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 

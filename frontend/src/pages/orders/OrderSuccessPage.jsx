@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { CheckCircle, ShoppingBag, Home, ShoppingCart, Truck, CreditCard, User, Box, Clock } from 'lucide-react';
-import orderApi from '../api/order';
-import useDeliveryOptions from '../hooks/useDeliveryOptions';
+import orderApi from '../../api/order.js';
+import useDeliveryOptions from '../../hooks/useDeliveryOptions.js';
 
 export default function OrderSuccess() {
     const { state } = useLocation();

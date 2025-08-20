@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from 'react-router-dom';
-import userApi from "../api/user";
-import { useAuth } from "../contexts/AuthContext";
-import PasswordConfirmationModal from "../components/profile/PasswordConfirmationModal";
+import userApi from "../../api/user.js";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import PasswordConfirmationModal from "../../components/profile/PasswordConfirmationModal.jsx";
 
 // プロファイルと住所管理ロジックを持つ新しいコンポーネント
-import ProfileManagementSection from "../components/profile/ProfileManagementSection";
+import ProfileManagementSection from "../../components/profile/ProfileManagementSection.jsx";
 
 // My Walletのロジックを持つ新しいコンポーネント
-import WalletSection from "../components/profile/WalletSection";
+import WalletSection from "../../components/profile/WalletSection.jsx";
 
 export default function ProfilePage() {
     const { isLoggedIn, logout, loading: authLoading } = useAuth();

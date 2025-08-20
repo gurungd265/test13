@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import productsApi from '../api/products.js';  // productsApi import
+import productsApi from '../../api/products.js';  // productsApi import
 
-import Product from '../components/Product.jsx';
-import CategoryFilter from '../components/header/CategoryFilter.jsx';
-import Pagination from '../components/Pagination.jsx';
+import Product from '../../components/product/Product.jsx';
+import CategoryFilter from '../../components/header/CategoryFilter.jsx';
+import Pagination from '../../components/product/Pagination.jsx';
 
 export default function FilteredProductPage() {
     const [searchParams] = useSearchParams();

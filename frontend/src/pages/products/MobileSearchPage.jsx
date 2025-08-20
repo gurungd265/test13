@@ -1,4 +1,4 @@
-import MobileSearch from "../components/mobile/MobileSearch.jsx";
+import MobileSearch from "../../components/mobile/MobileSearch.jsx";
 
 export default function MobileSearchPage() {
     return (

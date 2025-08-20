@@ -1,7 +1,7 @@
 import { useState,useEffect,useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import cartApi from '../api/cart';
-import {CartContext} from '../contexts/CartContext';
+import cartApi from '../../api/cart.js';
+import {CartContext} from '../../contexts/CartContext.jsx';
 
 
 export default function CartPage() {

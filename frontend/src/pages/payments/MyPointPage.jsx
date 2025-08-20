@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import * as virtualPaymentsApi from '../api/virtualPayments';
-import * as paymentRegistrationApi from '../api/paymentRegistration';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import * as virtualPaymentsApi from '../../api/virtualPayments.js';
+import * as paymentRegistrationApi from '../../api/paymentRegistration.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCoins, faPlusCircle, faMinusCircle, faCreditCard, faMobileAlt, faArrowLeft, faWallet } from '@fortawesome/free-solid-svg-icons';
 

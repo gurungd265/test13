@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import reviewApi from '../api/review';
+import reviewApi from '../../api/review.js';
 
 const maskEmail = (email) => {
     if (!email) return '';

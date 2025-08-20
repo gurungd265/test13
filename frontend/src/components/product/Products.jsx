@@ -1,6 +1,6 @@
 import React,{useState,useEffect} from "react";
-import Product from "./Product";
-import productsApi from "../api/products";
+import Product from "./Product.jsx";
+import productsApi from "../../api/products.js";
 
 export default function Products() {
     const [products, setProducts] = useState([]);

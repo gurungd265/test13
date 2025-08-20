@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import productsApi from '../api/products';
-import cartApi from '../api/cart';
-import wishlistApi from '../api/wishlist';
-import reviewApi from "../api/review.js";
+import productsApi from '../../api/products.js';
+import cartApi from '../../api/cart.js';
+import wishlistApi from '../../api/wishlist.js';
+import reviewApi from "../../api/review.js";
 import { Heart, X } from "lucide-react";
-import { CartContext } from '../contexts/CartContext';
-import { useAuth } from "../contexts/AuthContext.jsx";
-import ImageSlider from "../components/ImageSlider.jsx";
-import ProductReviewList from "../components/ProductReviewList";
+import { CartContext } from '../../contexts/CartContext.jsx';
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import ImageSlider from "../../components/product/ImageSlider.jsx";
+import ProductReviewList from "../../components/product/ProductReviewList.jsx";
 
 export default function ProductPage() {
     const { id } = useParams();
