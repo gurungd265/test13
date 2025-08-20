@@ -32,17 +32,21 @@ export default function SignupPage(){
                 return;
             }
             if (password.length < 8) {
-                setError('パスワードは8個以上入力してください');
+                setError('パスワードは8個以上入力してください。');
                 passwordRef.current.focus();
                 return;
             }
             if (password !== confirmPassword) {
-                setError('パスワードが一致しません！');
+                setError('パスワードが一致しません。');
                 confirmPasswordRef.current.focus();
                 return;
             }
             if (!email.includes('@') || !email.includes('.')) {
-                setError('有効なEmail形式を入力してください');
+                setError('有効なEmail形式を入力してください。');
+                return;
+            }
+            if (!lastName.trim() || !firstName.trim()) {
+                setError('名字と名前は必須入力です。');
                 return;
             }
             if (phoneNumber && !/^\d{10,11}$/.test(phoneNumber)) {
@@ -50,7 +54,7 @@ export default function SignupPage(){
                  return;
             }
             if(!agreedToPrivacy){
-                setError('個人情報の同意にチェックしてください');
+                setError('個人情報の同意にチェックしてください。');
                 agreedToPrivacyRef.current.focus();
                 return;
             }
@@ -58,8 +62,9 @@ export default function SignupPage(){
             const userData = {
                 email,
                 password,
-                lastName: lastName || null,
-                firstName: firstName || null,
+                lastName,
+                firstName,
+                gender: gender || null,
                 phoneNumber: phoneNumber || null,
             };
 
@@ -136,39 +141,41 @@ export default function SignupPage(){
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="passwordをもう一度入力してください！"
+                                placeholder="passwordをもう一度入力してください。"
                                 ref={confirmPasswordRef}
                             />
                         </div>
 
-                        {/* 名字 (選択) */}
-                        <div className="mb-4">
-                            <label htmlFor="lastName" className="block text-gray-700 text-sm font-bold mb-2">
-                                名字
-                            </label>
-                            <input
-                                type="text"
-                                id="lastName"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                placeholder="名字を入力してください (選択項目)"
-                            />
-                        </div>
+                        <div className="flex gap-4 mb-4">
+                            {/* 名字 */}
+                            <div className="w-1/2">
+                                <label htmlFor="lastName" className="block text-gray-700 text-sm font-bold mb-2">
+                                    名字 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    placeholder="名字を入力してください。"
+                                />
+                            </div>
 
-                        {/* 下の名前 (選択) */}
-                        <div className="mb-4">
-                            <label htmlFor="firstName" className="block text-gray-700 text-sm font-bold mb-2">
-                                名前
-                            </label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                placeholder="名前を入力してください (選択項目)"
-                            />
+                            {/* 下の名前 */}
+                            <div className="w-1/2">
+                                <label htmlFor="firstName" className="block text-gray-700 text-sm font-bold mb-2">
+                                    名前 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="firstName"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    placeholder="名前を入力してください。"
+                                />
+                            </div>
                         </div>
 
                         {/* 性別 (選択) */}
@@ -185,7 +192,7 @@ export default function SignupPage(){
                                 <option value="">選択なし</option>
                                 <option value="male">男</option>
                                 <option value="female">女</option>
-                                <option value="other">その他の性別</option>
+                                <option value="other">その他</option>
                             </select>
                         </div>
 
