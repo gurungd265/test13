@@ -2,7 +2,7 @@ import React,{useState,useRef} from 'react';
 import {useNavigate,Link} from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://calmarket-env-1.eba-tbq9rmtf.us-east-1.elasticbeanstalk.com';
 
 export default function SignupPage(){
     const [email,setEmail] = useState('');
@@ -69,7 +69,7 @@ export default function SignupPage(){
             };
 
             try {
-                const response = await axios.post(`${API_BASE_URL}/api/users/signup`, userData);
+                const response = await axios.post(`/api/users/signup`, userData);
 
                 if (response.status === 201 || response.status === 200) {
                     alert('会員登録に成功しました！');

@@ -28,9 +28,11 @@ public class SwaggerConfig {
         localServer.setDescription("Development server (Local)"); // 서버에 대한 설명
 
         // 만약 나중에 실제 운영 서버가 있다면 추가할 수 있습니다.
-        // Server prodServer = new Server();
-        // prodServer.setUrl("https://your-production-api.com"); // 실제 운영 서버 주소
-        // prodServer.setDescription("Production server"); // 운영 서버에 대한 설명
+        Server prodServer = new Server();
+        prodServer.setUrl("http://calmarket-env-1.eba-tbq9rmtf.us-east-1.elasticbeanstalk.com/");
+        prodServer.setDescription("Production Backend Server");
+
+        // 운영 서버에 대한 설명
 
         // 2. API 문서 제공자의 연락처 정보 설정
         Contact contact = new Contact();
@@ -56,6 +58,6 @@ public class SwaggerConfig {
         // 여기서는 info와 servers를 설정하여 OpenAPI 객체를 빌드합니다.
         return new OpenAPI()
                 .info(info) // API 기본 정보 설정
-                .servers(List.of(localServer /*, prodServer (운영 서버 추가 시)*/)); // API가 배포될 서버 목록 설정
+                .servers(List.of(localServer , prodServer )); // API가 배포될 서버 목록 설정
     }
 }
