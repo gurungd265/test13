@@ -23,90 +23,77 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true) //@PreAuthorize 활성화
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
     private final JwtToken jwtToken;
 
-    public SecurityConfig(JwtToken jwtToken){
+    public SecurityConfig(JwtToken jwtToken) {
         this.jwtToken = jwtToken;
     }
 
-    //비밀번호 암호화를 위한 빈 설정
-    //회원가입 시 저장, 로그인 시 비교
+    // Password encoder for signup and login
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    //로그인 시 UsernamePasswordAuthenticationToken 인증 수행에 사용
+    // Authentication manager
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws  Exception{
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    //Vite 개발 서버에서 API 호출이 가능하도록 허용
-    //나중에 배포할 땐 실제 도메인으로 변경 필요
+    // ✅ CORS configuration for Vercel + Local Development
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5174","https://calmarketon-7vtpfx2js-gurungd265s-projects.vercel.app")); // React/Vite 개발 서버 주소
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "https://*.vercel.app",   // Any Vercel deployment
+                "https://*.onrender.com", // Render frontend if needed
+                "http://localhost:*",     // Local dev
+                "http://127.0.0.1:*"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+        configuration.setMaxAge(3600L); // 1 hour cache for preflight
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
-    //UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 등록
-    //JwtAuthenticationFilter는 요청에서 토큰을 추출하고 유효성 검사 및 인증 주입 수행
+    // ✅ Main security filter chain
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(formLogin -> formLogin.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // ✅ Public Endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/signup").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/categories/**").permitAll()
+                        .requestMatchers("/api/cart/items", "/api/cart", "/api/cart/items/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
 
-                        // --- REVIEW API ---
+                        // ✅ Reviews: GET public, others need login
                         .requestMatchers(HttpMethod.GET, "/api/products/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/products/*/reviews/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/products/*/reviews/*").authenticated()
 
-                        .requestMatchers("/api/cart/items","/api/cart").permitAll()
-                        .requestMatchers("/api/cart/items/**").permitAll()
-                        .requestMatchers("/api/categories/**").permitAll()
-                        .requestMatchers("/api/cart/merge").authenticated()
-                        .requestMatchers("/api/cart/count").permitAll()
-
-                        .requestMatchers("/api/cart/items/batch-delete").authenticated()
-
-                        .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
-                        .requestMatchers("/api/addresses/me", "/api/addresses/**").authenticated()
-                        .requestMatchers("/api/balances/**").authenticated()
-                        .requestMatchers("/api/register/**").authenticated()
-
-                        .requestMatchers("/api/users/me/wishlists/**").authenticated()
-                        .requestMatchers("/api/orders/**").authenticated()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
+                        // ✅ Everything else requires authentication
                         .anyRequest().authenticated()
                 )
-                // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
+                // Add JWT filter
                 .addFilterBefore(new JwtAuthenticationFilter(jwtToken), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
 }
