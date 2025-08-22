@@ -24,7 +24,7 @@ public class SwaggerConfig {
         // 1. API가 배포될 서버(URL) 정보 설정
         // 로컬 개발 환경 서버
         Server localServer = new Server();
-        localServer.setUrl("http://localhost:8080"); // 애플리케이션이 실행될 로컬 서버 주소
+        localServer.setUrl("https://calmarketon.vercel.app"); // 애플리케이션이 실행될 로컬 서버 주소
         localServer.setDescription("Development server (Local)"); // 서버에 대한 설명
 
         // 만약 나중에 실제 운영 서버가 있다면 추가할 수 있습니다.
