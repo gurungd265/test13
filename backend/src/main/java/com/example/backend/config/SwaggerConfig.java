@@ -24,15 +24,13 @@ public class SwaggerConfig {
         // 1. API가 배포될 서버(URL) 정보 설정
         // 로컬 개발 환경 서버
         Server localServer = new Server();
-        localServer.setUrl("https://calmarketon.vercel.app"); // 애플리케이션이 실행될 로컬 서버 주소
+        localServer.setUrl("http://localhost:8080"); // 애플리케이션이 실행될 로컬 서버 주소
         localServer.setDescription("Development server (Local)"); // 서버에 대한 설명
 
         // 만약 나중에 실제 운영 서버가 있다면 추가할 수 있습니다.
-        Server prodServer = new Server();
-        prodServer.setUrl("https://test13-2.onrender.com");
-        prodServer.setDescription("Production Backend Server");
-
-        // 운영 서버에 대한 설명
+        // Server prodServer = new Server();
+        // prodServer.setUrl("https://your-production-api.com"); // 실제 운영 서버 주소
+        // prodServer.setDescription("Production server"); // 운영 서버에 대한 설명
 
         // 2. API 문서 제공자의 연락처 정보 설정
         Contact contact = new Contact();
@@ -58,6 +56,6 @@ public class SwaggerConfig {
         // 여기서는 info와 servers를 설정하여 OpenAPI 객체를 빌드합니다.
         return new OpenAPI()
                 .info(info) // API 기본 정보 설정
-                .servers(List.of(localServer , prodServer )); // API가 배포될 서버 목록 설정
+                .servers(List.of(localServer /*, prodServer (운영 서버 추가 시)*/)); // API가 배포될 서버 목록 설정
     }
 }
