@@ -29,7 +29,7 @@ public class SwaggerConfig {
 
         // 만약 나중에 실제 운영 서버가 있다면 추가할 수 있습니다.
         Server prodServer = new Server();
-        prodServer.setUrl("http://calmarket-env-1.eba-tbq9rmtf.us-east-1.elasticbeanstalk.com/");
+        prodServer.setUrl("https://test13-2.onrender.com");
         prodServer.setDescription("Production Backend Server");
 
         // 운영 서버에 대한 설명
